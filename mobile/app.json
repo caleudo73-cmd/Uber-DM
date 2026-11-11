@@ -1,0 +1,13 @@
+{
+  "expo": {
+    "name": "Uber App",
+    "slug": "uber-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "plugins": [
+      "expo-secure-store",
+      "expo-status-bar"
+    ]
+  }
+}
