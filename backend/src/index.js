@@ -9,6 +9,7 @@ app.use(express.json());
 app.get('/health', (_req, res) => res.json({ ok: true }));
 app.use('/auth', require('./routes/auth.routes'));
 app.use('/rides', require('./routes/rides.routes'));
+app.use('/places', require('./routes/places.routes'));
 
 app.listen(env.PORT, '0.0.0.0', () => {
   console.log(`API lista en http://localhost:${env.PORT}`);

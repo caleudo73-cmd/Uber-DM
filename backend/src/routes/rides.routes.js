@@ -8,6 +8,11 @@ const { distanceKm, calculatePrice } = require('../services/pricingService');
 router.use(authenticate);
 
 const isPoint = (p) => p && typeof p.latitude === 'number' && typeof p.longitude === 'number';
+const toPoint = (p) => ({
+  latitude: p.latitude,
+  longitude: p.longitude,
+  name: typeof p.name === 'string' ? p.name.slice(0, 120) : null,
+});
 const all = () => [...rides.values()];
 const isActive = (r) => ACTIVE_STATUSES.includes(r.status);
 
@@ -36,8 +41,8 @@ router.post('/', requireRole(ROLES.PASSENGER), (req, res) => {
     passengerName: req.user.name,
     driverId: null,
     driverName: null,
-    origin,
-    destination,
+    origin: toPoint(origin),
+    destination: toPoint(destination),
     distanceKm: +km.toFixed(2),
     price: calculatePrice(km),
     currency: PRICING.CURRENCY,
