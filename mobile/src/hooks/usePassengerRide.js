@@ -1,6 +1,5 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import * as rideService from '../services/rideService';
-import { RIDE_STATUS } from '../config/constants';
 import useAsyncAction from './useAsyncAction';
 import usePolling from './usePolling';
 
@@ -20,27 +19,30 @@ export default function usePassengerRide() {
   const requesting = useAsyncAction(rideService.requestRide);
   const cancelling = useAsyncAction(rideService.cancelRide);
 
-  // Cada vez que cambia el destino, recalcula el precio
   const selectDestination = useCallback(
-    async (origin, point) => {
-      setDestination(point);
+    async (origin, place) => {
+      setDestination(place);
       setQuote(null);
-      const result = await quoting.run(origin, point);
+      const result = await quoting.run(origin, place);
       if (result) setQuote(result);
     },
     [quoting.run]
   );
+
+  const clearDestination = useCallback(() => {
+    setDestination(null);
+    setQuote(null);
+  }, []);
 
   const request = useCallback(
     async (origin) => {
       const result = await requesting.run(origin, destination);
       if (result) {
         setRide(result.ride);
-        setDestination(null);
-        setQuote(null);
+        clearDestination();
       }
     },
-    [requesting.run, destination]
+    [requesting.run, destination, clearDestination]
   );
 
   const cancel = useCallback(async () => {
@@ -49,18 +51,16 @@ export default function usePassengerRide() {
     setRide(null);
   }, [cancelling.run, ride]);
 
-  useEffect(() => {
-    if (ride?.status === RIDE_STATUS.COMPLETED) setRide(null);
-  }, [ride]);
-
   return {
     ride,
     destination,
     quote,
     selectDestination,
+    clearDestination,
     request,
     cancel,
-    loading: requesting.loading || cancelling.loading || quoting.loading,
+    loading: requesting.loading || cancelling.loading,
+    quoting: quoting.loading,
     error: requesting.error || cancelling.error || quoting.error,
   };
 }
