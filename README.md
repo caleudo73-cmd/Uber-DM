@@ -29,6 +29,9 @@ uber-app/
 
 ## 1. Crear el proyecto en Firebase
 
+> Guía paso a paso con capturas de dónde hacer clic y solución de errores comunes:
+> [docs/FIREBASE_SETUP.md](docs/FIREBASE_SETUP.md).
+
 1. Entra a <https://console.firebase.google.com> y crea un proyecto.
 2. **Authentication** → *Comenzar* → habilita el proveedor **Correo electrónico/contraseña**.
 3. **Firestore Database** → *Crear base de datos* → modo producción → región `us-central1`.

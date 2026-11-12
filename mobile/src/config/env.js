@@ -10,8 +10,6 @@ export const FIREBASE_CONFIG = {
   appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID ?? '',
 };
 
-export const USE_FIREBASE_EMULATOR = process.env.EXPO_PUBLIC_FIREBASE_EMULATOR === 'true';
-
 export const missingFirebaseKeys = Object.entries(FIREBASE_CONFIG)
   .filter(([, value]) => !value)
   .map(([key]) => key);
