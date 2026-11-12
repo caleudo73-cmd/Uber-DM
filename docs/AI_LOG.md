@@ -214,7 +214,7 @@ Reglas:
   `mobile/src/components/TestPaymentModal.js` (nuevo),
   `mobile/src/components/ActiveRidePanel.js`, `mobile/src/screens/PassengerHomeScreen.js`,
   `mobile/src/screens/DriverHomeScreen.js`, `mobile/scripts/payments.test.mjs`,
-  `firebase/firestore.rules`, `docs/PAYMENTS.md`, `README.md` — commit: PENDIENTE.
+  `firebase/firestore.rules`, `docs/PAYMENTS.md`, `README.md` — commit: `f63eddd`.
 - **Verificación:** `cd mobile && npm test` → 8/8 tarifas, 12/12 validaciones, 6/6 cuenta
   regresiva, 9/9 ganancias/historial y 11/11 pagos (46 en total). Bundle de Android sin
   errores (1086 módulos). Reglas de Firestore desplegadas sin necesidad de Blaze.
