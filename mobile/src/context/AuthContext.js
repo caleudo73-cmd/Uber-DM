@@ -17,6 +17,21 @@ export function AuthProvider({ children }) {
     return unsubscribe;
   }, []);
 
+  // El perfil se escucha aparte: así la aprobación del conductor llega en vivo,
+  // sin que el usuario tenga que cerrar sesión.
+  const userId = user?.id;
+  useEffect(() => {
+    if (!userId) return undefined;
+
+    return authService.subscribeToProfile(userId, (data) => {
+      setUser((current) =>
+        current
+          ? { ...current, ...data, id: current.id, email: current.email || data.email }
+          : current
+      );
+    });
+  }, [userId]);
+
   const signIn = useCallback((email, password) => authService.login(email, password), []);
   const signUp = useCallback((payload) => authService.register(payload), []);
   const signOut = useCallback(() => authService.logout(), []);

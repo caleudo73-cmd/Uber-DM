@@ -5,7 +5,7 @@ import {
   signOut as firebaseSignOut,
   updateProfile,
 } from 'firebase/auth';
-import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore';
+import { doc, getDoc, onSnapshot, serverTimestamp, setDoc } from 'firebase/firestore';
 import { APPROVAL_STATUS, ROLES } from '../config/constants';
 import { auth, firebaseConfigError, requireFirebase } from './firebase';
 
@@ -153,6 +153,21 @@ export const register = async (payload) => {
 export const logout = async () => {
   requireFirebase();
   await firebaseSignOut(auth);
+};
+
+// Escucha el documento del perfil: si un administrador aprueba al conductor,
+// la app lo refleja sin cerrar sesión.
+export const subscribeToProfile = (uid, onChange) => {
+  if (firebaseConfigError) return () => {};
+
+  const { db } = requireFirebase();
+  return onSnapshot(
+    doc(db, 'users', uid),
+    (snapshot) => {
+      if (snapshot.exists()) onChange(snapshot.data());
+    },
+    (error) => console.warn('No se pudo escuchar el perfil:', error.message)
+  );
 };
 
 // Mantiene la sesión sincronizada con Firebase Auth.
