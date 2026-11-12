@@ -120,7 +120,7 @@ Reglas:
   `mobile/src/services/userService.js`, `mobile/src/services/rideService.js`,
   `mobile/src/components/AvailabilityToggle.js`, `mobile/src/components/RideRequestCard.js`,
   `mobile/src/components/ActiveRidePanel.js`, `mobile/src/screens/DriverHomeScreen.js`,
-  `mobile/scripts/countdown.test.mjs` — commit: PENDIENTE.
+  `mobile/scripts/countdown.test.mjs` — commit: `d8f8186`.
 - **Verificación:** `cd mobile && npm test` → 8/8 tarifas, 12/12 validaciones y 6/6 de la
   cuenta regresiva. Bundle de Android sin errores (1071 módulos).
 - **Aprendizaje:** (completar) Qué entendí del estado de disponibilidad y qué haría distinto.
