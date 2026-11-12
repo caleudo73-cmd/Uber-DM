@@ -47,6 +47,18 @@ service cloud.firestore {
             resource.data.status == 'requested'
             && request.resource.data.driverId == request.auth.uid
           )
+        )
+        // El método de pago se elige al pedir el viaje y ya no cambia.
+        && (
+          request.resource.data.paymentMethod == resource.data.paymentMethod
+          || resource.data.status == 'requested'
+        )
+        // Los campos de pago con tarjeta solo los escribe el webhook (Admin SDK).
+        // En efectivo el conductor sí confirma el cobro desde la app.
+        && (
+          !request.resource.data.diff(resource.data).affectedKeys()
+            .hasAny(['paymentStatus', 'paymentId', 'paymentAmount', 'paidAt', 'paymentPreferenceId'])
+          || resource.data.paymentMethod == 'cash'
         );
 
       allow delete: if false;

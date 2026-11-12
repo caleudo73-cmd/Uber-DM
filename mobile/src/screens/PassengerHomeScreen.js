@@ -38,7 +38,14 @@ export default function PassengerHomeScreen({ navigation }) {
           <ErrorText message={locationError || rideState.error} />
 
           {ride && (
-            <ActiveRidePanel ride={ride} canCancel={canCancel} loading={rideState.loading} onCancel={rideState.cancel} />
+            <ActiveRidePanel
+              ride={ride}
+              canCancel={canCancel}
+              loading={rideState.loading}
+              paying={rideState.paying}
+              onCancel={rideState.cancel}
+              onPay={rideState.pay}
+            />
           )}
 
           {!ride && destination && (
@@ -46,6 +53,8 @@ export default function PassengerHomeScreen({ navigation }) {
               destination={destination}
               quote={quote}
               loading={rideState.loading || rideState.quoting}
+              paymentMethod={rideState.paymentMethod}
+              onChangePaymentMethod={rideState.setPaymentMethod}
               onConfirm={() => rideState.request(location)}
               onChange={rideState.clearDestination}
             />

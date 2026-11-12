@@ -4,11 +4,12 @@
   "main": "index.js",
   "scripts": {
     "start": "expo start",
-    "test": "npm run test:pricing && npm run test:validators && npm run test:countdown && npm run test:earnings",
+    "test": "npm run test:pricing && npm run test:validators && npm run test:countdown && npm run test:earnings && npm run test:payments",
     "test:pricing": "node scripts/pricing.test.mjs",
     "test:validators": "node scripts/validators.test.mjs",
     "test:countdown": "node scripts/countdown.test.mjs",
-    "test:earnings": "node scripts/earnings.test.mjs"
+    "test:earnings": "node scripts/earnings.test.mjs",
+    "test:payments": "node scripts/payments.test.mjs"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.2",
@@ -20,6 +21,7 @@
     "expo-image-picker": "~58.0.10",
     "expo-location": "~58.0.20",
     "expo-status-bar": "~58.0.4",
+    "expo-web-browser": "~58.0.8",
     "firebase": "^13.3.0",
     "react": "19.3.0",
     "react-native": "0.88.1",

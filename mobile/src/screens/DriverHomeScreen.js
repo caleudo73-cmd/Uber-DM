@@ -1,7 +1,9 @@
-import { FlatList, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, FlatList, StyleSheet, Text, View } from 'react-native';
 import theme from '../config/theme';
 import {
   APPROVAL_STATUS,
+  PAYMENT_METHOD,
+  PAYMENT_METHOD_LABEL,
   RIDE_STATUS,
   RIDE_STATUS_LABEL,
 } from '../config/constants';
@@ -54,6 +56,8 @@ function PendingApproval({ user, onSignOut }) {
 }
 
 function CurrentRidePanel({ ride, driver }) {
+  const isCard = ride.paymentMethod === PAYMENT_METHOD.MERCADO_PAGO;
+
   const showActions = {
     [RIDE_STATUS.ACCEPTED]: (
       <Button
@@ -79,7 +83,8 @@ function CurrentRidePanel({ ride, driver }) {
         loading={driver.loading}
       />
     ),
-    [RIDE_STATUS.COMPLETED]: (
+    // Con tarjeta no hay nada que cobrar en la app: el webhook confirma el pago.
+    [RIDE_STATUS.COMPLETED]: isCard ? null : (
       <Button
         title="Cobrar en efectivo"
         variant="accent"
@@ -99,12 +104,23 @@ function CurrentRidePanel({ ride, driver }) {
         {CATEGORY_LABEL[ride.category] ?? ride.category} · {ride.origin?.name ?? 'Origen'} →{' '}
         {ride.destination?.name ?? 'Destino'}
       </Text>
+      <Text style={styles.meta}>
+        Pago: {PAYMENT_METHOD_LABEL[ride.paymentMethod] ?? ride.paymentMethod}
+        {isCard ? ' · se confirma solo al aprobarse' : ''}
+      </Text>
       <RideSummary
         distanceKm={ride.distanceKm}
         fare={ride.fare}
         currency={ride.currency}
         subtitle={`Ganancia neta: ${formatPrice(ride.driverEarnings, ride.currency)}`}
       />
+
+      {ride.status === RIDE_STATUS.COMPLETED && isCard ? (
+        <View style={styles.waiting}>
+          <ActivityIndicator color={colors.primary} />
+          <Text style={styles.meta}>Esperando el pago del pasajero con Mercado Pago…</Text>
+        </View>
+      ) : null}
 
       {showActions[ride.status] ?? null}
 
@@ -226,5 +242,11 @@ const styles = StyleSheet.create({
   },
   meta: { color: colors.textSecondary, marginBottom: spacing.sm },
   list: { flexGrow: 0 },
+  waiting: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginBottom: spacing.sm,
+  },
   gap: { height: spacing.sm },
 });

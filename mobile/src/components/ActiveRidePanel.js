@@ -1,7 +1,13 @@
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import theme from '../config/theme';
-import { RIDE_STATUS, RIDE_STATUS_LABEL } from '../config/constants';
+import {
+  PAYMENT_METHOD_LABEL,
+  PAYMENT_STATUS_LABEL,
+  RIDE_STATUS,
+  RIDE_STATUS_LABEL,
+} from '../config/constants';
 import { CATEGORY_LABEL } from '../config/pricing';
+import { canPayWithCard, isCardPayment } from '../utils/payments';
 import Button from './Button';
 import RideSummary from './RideSummary';
 
@@ -11,7 +17,7 @@ const { colors, spacing, radius, fontSize, fontWeight } = theme;
 const vehicleLine = (vehicle) =>
   [vehicle.brand, vehicle.line, vehicle.color].filter(Boolean).join(' · ');
 
-export default function ActiveRidePanel({ ride, canCancel, loading, onCancel }) {
+export default function ActiveRidePanel({ ride, canCancel, loading, paying, onCancel, onPay }) {
   const searching = ride.status === RIDE_STATUS.REQUESTED;
   const vehicle = ride.driver?.vehicle;
 
@@ -50,6 +56,36 @@ export default function ActiveRidePanel({ ride, canCancel, loading, onCancel }) 
       )}
 
       <RideSummary distanceKm={ride.distanceKm} fare={ride.fare} currency={ride.currency} />
+
+      {ride.status === RIDE_STATUS.COMPLETED ? (
+        <View style={styles.payment}>
+          <Text style={styles.meta}>
+            Método: {PAYMENT_METHOD_LABEL[ride.paymentMethod] ?? ride.paymentMethod}
+          </Text>
+
+          {canPayWithCard(ride) ? (
+            <>
+              <Button
+                title="Pagar con Mercado Pago"
+                variant="accent"
+                onPress={onPay}
+                loading={paying}
+              />
+              <Text style={styles.hint}>
+                Se abrirá Mercado Pago en el navegador. El viaje se marca como pagado
+                automáticamente cuando se aprueba.
+              </Text>
+            </>
+          ) : isCardPayment(ride) ? (
+            <Text style={[styles.hint, styles.approved]}>
+              Pago {PAYMENT_STATUS_LABEL[ride.paymentStatus] ?? 'pendiente'}
+            </Text>
+          ) : (
+            <Text style={styles.hint}>Paga en efectivo al conductor.</Text>
+          )}
+        </View>
+      ) : null}
+
       {canCancel && <Button title="Cancelar viaje" variant="ghost" onPress={onCancel} loading={loading} />}
     </>
   );
@@ -86,4 +122,7 @@ const styles = StyleSheet.create({
     fontWeight: fontWeight.bold,
     letterSpacing: 1,
   },
+  payment: { gap: spacing.xs, marginBottom: spacing.sm },
+  hint: { color: colors.textSecondary, fontSize: fontSize.sm, lineHeight: 18 },
+  approved: { color: colors.success, fontWeight: fontWeight.medium },
 });

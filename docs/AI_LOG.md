@@ -153,3 +153,37 @@ Reglas:
   regresiva y 9/9 ganancias/historial. Bundle de Android sin errores (1078 módulos).
 - **Aprendizaje:** (completar) Qué entendí de separar los cálculos puros de las pantallas y
   qué haría distinto.
+
+---
+
+### Entrada #5 - Fecha: 2026-11-11 - Integrante: (completar) - Herramienta: Asistente de código (Big Pickle / OpenCode)
+
+- **Objetivo:** Implementar el pago con tarjeta en modo prueba con Mercado Pago, cerrando el
+  ciclo `completed → paid` sin efectivo.
+- **Prompt:** «La A» (elegí la opción A: Cloud Functions + checkout en el navegador).
+- **Resumen de la respuesta:** Se completaron las Cloud Functions de pago: la preferencia de
+  Checkout Pro se crea en el servidor, que recalcula la tarifa y valida que el viaje sea del
+  pasajero. El webhook valida la firma HMAC (`x-signature`), consulta el pago real contra la
+  API, comprueba que el monto coincida con tarifa + propina y marca el viaje como `paid`.
+  En modo prueba se abre `sandbox_init_point`. En la app se agregó el selector
+  **Efectivo / Mercado Pago** al confirmar el viaje, el botón *Pagar con Mercado Pago* al
+  finalizar (abre el checkout con `expo-web-browser`) y el estado *Esperando el pago…* en la
+  pantalla del conductor.
+- **Qué se usó / modificó / descartó:** Se reutilizó la base de funciones del commit
+  `cfa4feb` y se amplió. Se descartaron los SDK nativos de Mercado Pago y Stripe porque no
+  funcionan en Expo Go; en su lugar se usa Checkout Pro en el navegador. Se descartó guardar
+  el pago desde la app: las reglas de Firestore bloquean `paymentStatus`, `paymentId`,
+  `paidAt` y `paymentPreferenceId` en viajes con tarjeta, y solo el webhook (Admin SDK) los
+  escribe.
+- **Archivos y commit:** `firebase/functions/index.js`, `firebase/functions/.env.example`,
+  `firebase/firestore.rules`, `mobile/src/services/paymentService.js`,
+  `mobile/src/utils/payments.js`, `mobile/src/hooks/usePassengerRide.js`,
+  `mobile/src/components/ConfirmPanel.js`, `mobile/src/components/ActiveRidePanel.js`,
+  `mobile/src/screens/PassengerHomeScreen.js`, `mobile/src/screens/DriverHomeScreen.js`,
+  `mobile/scripts/payments.test.mjs`, `docs/PAYMENTS.md`, `README.md` — commit: PENDIENTE.
+- **Verificación:** `cd mobile && npm test` → 8/8 tarifas, 12/12 validaciones, 6/6 cuenta
+  regresiva, 9/9 ganancias/historial y 5/5 pagos. Bundle de Android sin errores (1085
+  módulos). Reglas de Firestore desplegadas. El despliegue de Functions quedó pendiente de
+  activar el plan Blaze.
+- **Aprendizaje:** (completar) Qué entendí de no confiar en el monto que envía la app y qué
+  haría distinto.

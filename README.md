@@ -90,20 +90,27 @@ de Firestore (colección `users`).
 
 ## 4. Cloud Functions y pagos (Mercado Pago)
 
+Los pagos con tarjeta usan **Checkout Pro** y requieren el plan **Blaze**. La guía paso a
+paso (credenciales, webhook, pruebas) está en [docs/PAYMENTS.md](docs/PAYMENTS.md).
+
 ```bash
 cd firebase/functions
 npm install
 copy .env.example .env    # completa MERCADO_PAGO_ACCESS_TOKEN de PRUEBA
 cd ..
 firebase deploy --only functions
+firebase deploy --only firestore:rules
 ```
 
 Las funciones son:
 
-- `createPaymentPreference`: recalcula la tarifa en el servidor y crea la preferencia de
-  Checkout Pro. Devuelve `init_point` para abrirla en el navegador o un WebView.
-- `mercadoPagoWebhook`: consulta el pago contra la API y actualiza
-  `paymentStatus`, `paymentId` y `status: paid`.
+- `createPaymentPreference`: recalcula la tarifa en el servidor, valida que el viaje sea del
+  pasajero y crea la preferencia de Checkout Pro. Devuelve `initPoint` (el checkout de
+  sandbox en modo prueba) para abrirlo con `expo-web-browser`.
+- `mercadoPagoWebhook`: valida la firma HMAC, consulta el pago contra la API, comprueba que
+  el monto coincida con la tarifa + propina y actualiza `paymentStatus`, `paymentId` y
+  `status: paid`.
+- `paymentReturn`: página que ve el usuario al volver del checkout.
 - `health`: verificación rápida del despliegue.
 
 El access token vive únicamente en `firebase/functions/.env` (excluido de Git). La app nunca
@@ -147,9 +154,11 @@ npm run test:pricing
   tecnomecánica. Las fotos se comprimen y se guardan en `users/{uid}/documents`.
 - El conductor queda en estado **Pendiente** hasta que un administrador cambie
   `approvalStatus` a `approved` en Firestore.
-- El pasajero busca un destino, ve la estimación y solicita el viaje.
+- El pasajero busca un destino, ve la estimación, elige **Efectivo** o **Mercado Pago** y
+  solicita el viaje.
 - El conductor ve las solicitudes en tiempo real (`onSnapshot`), acepta, marca
-  *Voy en camino*, *Pasajero a bordo*, finaliza y cobra en efectivo.
+  *Voy en camino*, *Pasajero a bordo* y finaliza. Con efectivo confirma el cobro; con
+  tarjeta espera a que el webhook confirme el pago.
 - **Disponible / No disponible**: el conductor activa el interruptor y la app empieza a
   seguir su ubicación (`expo-location`) y a escuchar solicitudes; el estado se guarda en
   `users/{uid}.isAvailable`.
@@ -159,6 +168,9 @@ npm run test:pricing
   **nombre, marca/línea, color, tipo de vehículo y placa**.
 - Estados del viaje: `requested → accepted → driver_arriving → in_progress →
   completed → paid` (o `cancelled`).
+- **Pago con tarjeta**: al finalizar, el pasajero toca *Pagar con Mercado Pago*, se abre el
+  checkout en el navegador y el viaje pasa a `paid` cuando el webhook aprueba el pago. El
+  conductor ve *Esperando el pago…* mientras tanto.
 - Perfil con estadísticas calculadas sobre los viajes.
 - **Ganancias** (conductor): totales de Hoy / Semana / Mes con ganancia neta, tarifas
   cobradas, comisión de la plataforma y propinas. Se calcula en el teléfono a partir de los
@@ -169,10 +181,11 @@ npm run test:pricing
 - **Detalle del viaje**: recorrido, distancia, duración, categoría, tarifa, comisión,
   propina, ganancia del conductor, método y estado del pago, y datos del vehículo.
 
-Pendiente de la especificación completa: pagos con tarjeta (Mercado Pago/Stripe en modo
-prueba) y notificaciones push.
+Pendiente de la especificación completa: notificaciones push. Mejora opcional: calificación
+del pasajero al conductor (hoy el promedio se calcula sobre `trips.rating`, pero no hay
+pantalla para calificar).
 
-Pruebas (tarifas, validaciones, cuenta regresiva, ganancias e historial):
+Pruebas (tarifas, validaciones, cuenta regresiva, ganancias, historial y pagos):
 
 ```bash
 cd mobile
