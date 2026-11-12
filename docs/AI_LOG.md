@@ -180,7 +180,7 @@ Reglas:
   `mobile/src/utils/payments.js`, `mobile/src/hooks/usePassengerRide.js`,
   `mobile/src/components/ConfirmPanel.js`, `mobile/src/components/ActiveRidePanel.js`,
   `mobile/src/screens/PassengerHomeScreen.js`, `mobile/src/screens/DriverHomeScreen.js`,
-  `mobile/scripts/payments.test.mjs`, `docs/PAYMENTS.md`, `README.md` — commit: PENDIENTE.
+  `mobile/scripts/payments.test.mjs`, `docs/PAYMENTS.md`, `README.md` — commit: `27a56b3`.
 - **Verificación:** `cd mobile && npm test` → 8/8 tarifas, 12/12 validaciones, 6/6 cuenta
   regresiva, 9/9 ganancias/historial y 5/5 pagos. Bundle de Android sin errores (1085
   módulos). Reglas de Firestore desplegadas. El despliegue de Functions quedó pendiente de
