@@ -137,6 +137,17 @@ export const subscribeDriverHistory = (driverId, onChange, onError) => {
   );
 };
 
+// Historial completo del usuario (como pasajero o conductor).
+export const subscribeRideHistory = (userId, onChange, onError) => {
+  const q = query(collection(db, TRIPS), where('participants', 'array-contains', userId));
+
+  return onSnapshot(
+    q,
+    (snapshot) => onChange(snapshot.docs.map(toRide)),
+    (error) => onError?.(error.message)
+  );
+};
+
 export const acceptRide = async (rideId) => {
   const { auth, db } = requireFirebase();
   const user = auth.currentUser;

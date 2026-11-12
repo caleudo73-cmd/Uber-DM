@@ -160,11 +160,19 @@ npm run test:pricing
 - Estados del viaje: `requested → accepted → driver_arriving → in_progress →
   completed → paid` (o `cancelled`).
 - Perfil con estadísticas calculadas sobre los viajes.
+- **Ganancias** (conductor): totales de Hoy / Semana / Mes con ganancia neta, tarifas
+  cobradas, comisión de la plataforma y propinas. Se calcula en el teléfono a partir de los
+  viajes finalizados o pagados; no se guarda ningún total en Firestore.
+- **Historial**: todos los viajes del usuario en tiempo real, con filtros por estado
+  (todos / completados / cancelados) y por rol (pasajero / conductor), paginación
+  "Ver más" de 10 en 10 y detalle completo de cada viaje.
+- **Detalle del viaje**: recorrido, distancia, duración, categoría, tarifa, comisión,
+  propina, ganancia del conductor, método y estado del pago, y datos del vehículo.
 
-Pendiente de la especificación completa: pantalla de ganancias, historial con filtros,
-pagos con tarjeta (Mercado Pago/Stripe en modo prueba) y notificaciones push.
+Pendiente de la especificación completa: pagos con tarjeta (Mercado Pago/Stripe en modo
+prueba) y notificaciones push.
 
-Pruebas (tarifas y validaciones):
+Pruebas (tarifas, validaciones, cuenta regresiva, ganancias e historial):
 
 ```bash
 cd mobile

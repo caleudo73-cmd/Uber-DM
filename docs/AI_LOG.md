@@ -124,3 +124,32 @@ Reglas:
 - **Verificación:** `cd mobile && npm test` → 8/8 tarifas, 12/12 validaciones y 6/6 de la
   cuenta regresiva. Bundle de Android sin errores (1071 módulos).
 - **Aprendizaje:** (completar) Qué entendí del estado de disponibilidad y qué haría distinto.
+
+---
+
+### Entrada #4 - Fecha: 2026-11-11 - Integrante: (completar) - Herramienta: Asistente de código (Big Pickle / OpenCode)
+
+- **Objetivo:** Implementar la pantalla de ganancias del conductor y el historial de viajes
+  con filtros y detalle, según la especificación.
+- **Prompt:** «sigue con ganancias e historial».
+- **Resumen de la respuesta:** Se agregó `utils/earnings.js` con funciones puras para
+  calcular los totales de Hoy, Semana (desde el lunes) y Mes (desde el día 1), sumando solo
+  viajes `completed`/`paid`: bruto, comisión, propinas y neto. `utils/history.js` concentra
+  los filtros por estado y por rol. La pantalla **Ganancias** muestra la ganancia neta en un
+  bloque destacado, dos tarjetas (bruto y comisión tomada de `PRICING`) y un desglose
+  completo. **Historial** escucha `subscribeRideHistory` (`participants array-contains`),
+  ordena en el cliente, filtra con chips, pagina de 10 en 10 y abre el detalle del viaje.
+- **Qué se usó / modificó / descartó:** Se calcularon los totales en el teléfono en lugar de
+  guardarlos en Firestore para no duplicar la fuente de verdad ni necesitar Cloud Functions.
+  Se descartó `orderBy` en la consulta porque exigiría un índice compuesto; el orden se hace
+  con `sortByDateDesc`.
+- **Archivos y commit:** `mobile/src/utils/earnings.js`, `mobile/src/utils/history.js`,
+  `mobile/src/hooks/useRideHistory.js`, `mobile/src/screens/EarningsScreen.js`,
+  `mobile/src/screens/HistoryScreen.js`, `mobile/src/screens/RideDetailScreen.js`,
+  `mobile/src/components/ChipRow.js`, `mobile/src/utils/format.js`,
+  `mobile/src/services/rideService.js`, `mobile/src/navigation/AppNavigator.js`,
+  `mobile/src/screens/ProfileScreen.js`, `mobile/scripts/earnings.test.mjs` — commit: PENDIENTE.
+- **Verificación:** `cd mobile && npm test` → 8/8 tarifas, 12/12 validaciones, 6/6 cuenta
+  regresiva y 9/9 ganancias/historial. Bundle de Android sin errores (1078 módulos).
+- **Aprendizaje:** (completar) Qué entendí de separar los cálculos puros de las pantallas y
+  qué haría distinto.

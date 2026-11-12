@@ -5,13 +5,25 @@ import theme from '../config/theme';
 import { ROLES } from '../config/constants';
 import useAuth from '../hooks/useAuth';
 import DriverHomeScreen from '../screens/DriverHomeScreen';
+import EarningsScreen from '../screens/EarningsScreen';
 import FirebaseConfigScreen from '../screens/FirebaseConfigScreen';
+import HistoryScreen from '../screens/HistoryScreen';
 import LoginScreen from '../screens/LoginScreen';
 import PassengerHomeScreen from '../screens/PassengerHomeScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import RegisterScreen from '../screens/RegisterScreen';
+import RideDetailScreen from '../screens/RideDetailScreen';
 
 const Stack = createNativeStackNavigator();
+
+// Las pantallas internas comparten el mismo encabezado.
+const innerOptions = (title) => ({
+  headerShown: true,
+  title,
+  headerTintColor: theme.colors.textPrimary,
+  headerStyle: { backgroundColor: theme.colors.background },
+  headerShadowVisible: false,
+});
 
 export default function AppNavigator() {
   const { user, booting, configError } = useAuth();
@@ -38,16 +50,16 @@ export default function AppNavigator() {
         {user?.role === ROLES.PASSENGER && <Stack.Screen name="PassengerHome" component={PassengerHomeScreen} />}
         {user?.role === ROLES.DRIVER && <Stack.Screen name="DriverHome" component={DriverHomeScreen} />}
         {user && (
-          <Stack.Screen
-            name="Profile"
-            component={ProfileScreen}
-            options={{
-              headerShown: true,
-              title: 'Mi perfil',
-              headerTintColor: theme.colors.textPrimary,
-              headerStyle: { backgroundColor: theme.colors.background },
-            }}
-          />
+          <>
+            <Stack.Screen name="Profile" component={ProfileScreen} options={innerOptions('Mi perfil')} />
+            <Stack.Screen name="Earnings" component={EarningsScreen} options={innerOptions('Ganancias')} />
+            <Stack.Screen name="History" component={HistoryScreen} options={innerOptions('Historial')} />
+            <Stack.Screen
+              name="RideDetail"
+              component={RideDetailScreen}
+              options={innerOptions('Detalle del viaje')}
+            />
+          </>
         )}
       </Stack.Navigator>
     </NavigationContainer>

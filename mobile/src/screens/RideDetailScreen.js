@@ -1,0 +1,115 @@
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import theme from '../config/theme';
+import {
+  PAYMENT_METHOD_LABEL,
+  PAYMENT_STATUS_LABEL,
+  RIDE_STATUS_LABEL,
+} from '../config/constants';
+import { CATEGORY_LABEL } from '../config/pricing';
+import { formatDateTime, formatKm, formatPrice } from '../utils/format';
+import ScreenContainer from '../components/ScreenContainer';
+
+const { colors, spacing, radius, fontSize, fontWeight } = theme;
+
+function Line({ label, value, strong }) {
+  return (
+    <View style={styles.line}>
+      <Text style={[styles.label, strong && styles.strong]}>{label}</Text>
+      <Text style={[styles.value, strong && styles.strong]}>{value}</Text>
+    </View>
+  );
+}
+
+function Section({ title, children }) {
+  return (
+    <View style={styles.section}>
+      <Text style={styles.sectionTitle}>{title}</Text>
+      {children}
+    </View>
+  );
+}
+
+export default function RideDetailScreen({ route }) {
+  const { ride } = route.params;
+  const vehicle = ride.driver?.vehicle;
+
+  return (
+    <ScreenContainer padded={false}>
+      <ScrollView contentContainerStyle={styles.content}>
+        <Text style={styles.status}>{RIDE_STATUS_LABEL[ride.status] ?? ride.status}</Text>
+        <Text style={styles.date}>{formatDateTime(ride.completedAt ?? ride.createdAt)}</Text>
+
+        <Section title="Recorrido">
+          <Line label="Origen" value={ride.origin?.name ?? '—'} />
+          <Line label="Destino" value={ride.destination?.name ?? '—'} />
+          <Line label="Distancia" value={formatKm(ride.distanceKm ?? 0)} />
+          <Line label="Duración estimada" value={`${ride.durationMin ?? 0} min`} />
+          <Line label="Categoría" value={CATEGORY_LABEL[ride.category] ?? ride.category ?? '—'} />
+        </Section>
+
+        <Section title="Pago">
+          <Line label="Tarifa" value={formatPrice(ride.fare, ride.currency)} />
+          <Line label="Comisión de la plataforma" value={`- ${formatPrice(ride.commission, ride.currency)}`} />
+          <Line label="Propina" value={formatPrice(ride.tip ?? 0, ride.currency)} />
+          <View style={styles.divider} />
+          <Line
+            label="Ganancia del conductor"
+            value={formatPrice(ride.driverEarnings, ride.currency)}
+            strong
+          />
+          <Line
+            label="Método"
+            value={PAYMENT_METHOD_LABEL[ride.paymentMethod] ?? ride.paymentMethod ?? '—'}
+          />
+          <Line
+            label="Estado del pago"
+            value={PAYMENT_STATUS_LABEL[ride.paymentStatus] ?? ride.paymentStatus ?? '—'}
+          />
+        </Section>
+
+        <Section title="Personas">
+          <Line label="Pasajero" value={ride.passengerName ?? '—'} />
+          <Line label="Conductor" value={ride.driverName ?? 'Sin asignar'} />
+          {vehicle ? (
+            <>
+              <Line
+                label="Vehículo"
+                value={[vehicle.brand, vehicle.line, vehicle.color].filter(Boolean).join(' · ') || '—'}
+              />
+              <Line label="Placa" value={vehicle.plate ?? '—'} />
+            </>
+          ) : null}
+        </Section>
+
+        <Text style={styles.note}>
+          La tarifa y la comisión se congelan al finalizar el viaje con la misma función que
+          usa la estimación del pasajero.
+        </Text>
+      </ScrollView>
+    </ScreenContainer>
+  );
+}
+
+const styles = StyleSheet.create({
+  content: { padding: spacing.lg },
+  status: { fontSize: fontSize.lg, fontWeight: fontWeight.bold, color: colors.textPrimary },
+  date: { color: colors.textSecondary, fontSize: fontSize.sm, marginBottom: spacing.lg },
+  section: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+  },
+  sectionTitle: {
+    fontSize: fontSize.md,
+    fontWeight: fontWeight.bold,
+    color: colors.textPrimary,
+    marginBottom: spacing.sm,
+  },
+  line: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 3 },
+  label: { color: colors.textSecondary, fontSize: fontSize.sm, flex: 1, paddingRight: spacing.md },
+  value: { color: colors.textPrimary, fontSize: fontSize.sm, textAlign: 'right' },
+  strong: { fontWeight: fontWeight.bold, fontSize: fontSize.md },
+  divider: { height: 1, backgroundColor: colors.border, marginVertical: spacing.sm },
+  note: { color: colors.textSecondary, fontSize: fontSize.sm, lineHeight: 20 },
+});

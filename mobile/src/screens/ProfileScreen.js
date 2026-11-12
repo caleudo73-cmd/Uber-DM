@@ -1,6 +1,6 @@
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import theme from '../config/theme';
-import { ROLE_LABEL } from '../config/constants';
+import { ROLE_LABEL, ROLES } from '../config/constants';
 import Button from '../components/Button';
 import ErrorText from '../components/ErrorText';
 import ScreenContainer from '../components/ScreenContainer';
@@ -11,7 +11,7 @@ import useProfile from '../hooks/useProfile';
 
 const { colors, spacing, radius, fontSize, fontWeight } = theme;
 
-export default function ProfileScreen() {
+export default function ProfileScreen({ navigation }) {
   const { signOut } = useAuth();
   const { profile, loading, error } = useProfile();
 
@@ -49,6 +49,14 @@ export default function ProfileScreen() {
         <StatCard label="Cancelados" value={stats.cancelledRides} />
       </View>
 
+      {user.role === ROLES.DRIVER ? (
+        <>
+          <Button title="Ganancias" variant="ghost" onPress={() => navigation.navigate('Earnings')} />
+          <View style={styles.gap} />
+        </>
+      ) : null}
+      <Button title="Historial de viajes" variant="ghost" onPress={() => navigation.navigate('History')} />
+      <View style={styles.gap} />
       <Button title="Cerrar sesión" variant="danger" onPress={signOut} />
     </ScreenContainer>
   );
@@ -76,4 +84,5 @@ const styles = StyleSheet.create({
   },
   badgeText: { color: colors.textPrimary, fontWeight: fontWeight.medium },
   stats: { flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.lg },
+  gap: { height: spacing.sm },
 });
