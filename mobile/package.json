@@ -4,9 +4,10 @@
   "main": "index.js",
   "scripts": {
     "start": "expo start",
-    "test": "npm run test:pricing && npm run test:validators",
+    "test": "npm run test:pricing && npm run test:validators && npm run test:countdown",
     "test:pricing": "node scripts/pricing.test.mjs",
-    "test:validators": "node scripts/validators.test.mjs"
+    "test:validators": "node scripts/validators.test.mjs",
+    "test:countdown": "node scripts/countdown.test.mjs"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.2",

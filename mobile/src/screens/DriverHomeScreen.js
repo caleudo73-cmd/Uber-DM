@@ -7,13 +7,16 @@ import {
 } from '../config/constants';
 import { CATEGORY_LABEL } from '../config/pricing';
 import { formatPrice } from '../utils/format';
+import AvailabilityToggle from '../components/AvailabilityToggle';
 import BottomSheet from '../components/BottomSheet';
 import Button from '../components/Button';
 import ErrorText from '../components/ErrorText';
 import RideMap from '../components/RideMap';
+import RideRequestCard from '../components/RideRequestCard';
 import RideSummary from '../components/RideSummary';
 import TopBar from '../components/TopBar';
 import useAuth from '../hooks/useAuth';
+import useDriverAvailability from '../hooks/useDriverAvailability';
 import useDriverRides from '../hooks/useDriverRides';
 
 const { colors, spacing, radius, fontSize, fontWeight } = theme;
@@ -115,7 +118,18 @@ function CurrentRidePanel({ ride, driver }) {
   );
 }
 
-function AvailableRides({ rides, driver }) {
+function AvailableRides({ rides, driver, isAvailable }) {
+  if (!isAvailable) {
+    return (
+      <>
+        <Text style={styles.status}>No estás disponible</Text>
+        <Text style={styles.meta}>
+          Activa el interruptor para empezar a recibir solicitudes de viaje.
+        </Text>
+      </>
+    );
+  }
+
   return (
     <>
       <Text style={styles.status}>Solicitudes cercanas</Text>
@@ -123,26 +137,14 @@ function AvailableRides({ rides, driver }) {
         data={rides}
         keyExtractor={(item) => item.id}
         style={styles.list}
-        ListEmptyComponent={<Text style={styles.meta}>No hay solicitudes por ahora</Text>}
+        ListEmptyComponent={<Text style={styles.meta}>Esperando solicitudes…</Text>}
         renderItem={({ item }) => (
-          <View style={styles.card}>
-            <Text style={styles.meta}>{item.passengerName}</Text>
-            <Text style={styles.meta}>
-              {item.origin?.name ?? 'Origen'} → {item.destination?.name ?? 'Destino'}
-            </Text>
-            <RideSummary
-              distanceKm={item.distanceKm}
-              fare={item.fare}
-              currency={item.currency}
-              subtitle={`Ganancia neta: ${formatPrice(item.driverEarnings, item.currency)}`}
-            />
-            <Button
-              title="Aceptar"
-              variant="accent"
-              onPress={() => driver.accept(item.id)}
-              loading={driver.loading}
-            />
-          </View>
+          <RideRequestCard
+            ride={item}
+            onAccept={driver.accept}
+            onExpire={driver.dismiss}
+            loading={driver.loading}
+          />
         )}
       />
     </>
@@ -151,7 +153,8 @@ function AvailableRides({ rides, driver }) {
 
 export default function DriverHomeScreen({ navigation }) {
   const { user, signOut } = useAuth();
-  const driver = useDriverRides();
+  const availability = useDriverAvailability();
+  const driver = useDriverRides({ isAvailable: availability.available });
   const { currentRide, available } = driver;
 
   if (user?.approvalStatus && user.approvalStatus !== APPROVAL_STATUS.APPROVED) {
@@ -178,7 +181,19 @@ export default function DriverHomeScreen({ navigation }) {
           {currentRide ? (
             <CurrentRidePanel ride={currentRide} driver={driver} />
           ) : (
-            <AvailableRides rides={available} driver={driver} />
+            <>
+              <AvailabilityToggle
+                available={availability.available}
+                loading={availability.loading}
+                error={availability.error}
+                onToggle={availability.toggle}
+              />
+              <AvailableRides
+                rides={available}
+                driver={driver}
+                isAvailable={availability.available}
+              />
+            </>
           )}
         </BottomSheet>
       </View>
@@ -211,11 +226,5 @@ const styles = StyleSheet.create({
   },
   meta: { color: colors.textSecondary, marginBottom: spacing.sm },
   list: { flexGrow: 0 },
-  card: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.md,
-    padding: spacing.md,
-    marginBottom: spacing.sm,
-  },
   gap: { height: spacing.sm },
 });

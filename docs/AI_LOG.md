@@ -94,3 +94,33 @@ Reglas:
 > Ajuste posterior (commit `62be170`): se agregó `subscribeToProfile` para escuchar
 > `users/{uid}` con `onSnapshot` y que la aprobación del administrador se refleje en la app
 > sin cerrar sesión.
+
+---
+
+### Entrada #3 - Fecha: 2026-11-11 - Integrante: (completar) - Herramienta: Asistente de código (Big Pickle / OpenCode)
+
+- **Objetivo:** Implementar el interruptor Disponible / No disponible con seguimiento de
+  ubicación, la cuenta regresiva de 15 segundos de cada solicitud y mostrarle al pasajero
+  el nombre, vehículo, tipo de vehículo y placa del conductor.
+- **Prompt:** «sigue con el siguiente paso, y no te olvides que al usuario también le tiene
+  que salir nombre, vehículo, tipo de vehículo, y placas».
+- **Resumen de la respuesta:** Se agregó el hook `useDriverAvailability`, que guarda
+  `isAvailable` y `driverLocation` en el perfil y sigue la ubicación con `expo-location`
+  (escrituras limitadas a una cada 10 s o cada 25 m). El conductor solo escucha solicitudes
+  cuando está disponible y libre. Cada tarjeta usa la utilidad pura `utils/countdown.js`
+  para la cuenta regresiva de 15 s con barra de progreso y se descarta al expirar. Al
+  aceptar, `acceptRide` copia al viaje el nombre y el vehículo del conductor, y
+  `ActiveRidePanel` los muestra al pasajero.
+- **Qué se usó / modificó / descartó:** Se usó el GPS del teléfono en primer plano (sin
+  tareas en segundo plano, para no gastar batería ni complicar la entrega). Se descartó
+  filtrar solicitudes por categoría para no necesitar un índice compuesto en Firestore;
+  la categoría se muestra en la tarjeta.
+- **Archivos y commit:** `mobile/src/utils/countdown.js`,
+  `mobile/src/hooks/useDriverAvailability.js`, `mobile/src/hooks/useDriverRides.js`,
+  `mobile/src/services/userService.js`, `mobile/src/services/rideService.js`,
+  `mobile/src/components/AvailabilityToggle.js`, `mobile/src/components/RideRequestCard.js`,
+  `mobile/src/components/ActiveRidePanel.js`, `mobile/src/screens/DriverHomeScreen.js`,
+  `mobile/scripts/countdown.test.mjs` — commit: PENDIENTE.
+- **Verificación:** `cd mobile && npm test` → 8/8 tarifas, 12/12 validaciones y 6/6 de la
+  cuenta regresiva. Bundle de Android sin errores (1071 módulos).
+- **Aprendizaje:** (completar) Qué entendí del estado de disponibilidad y qué haría distinto.

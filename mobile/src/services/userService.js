@@ -1,7 +1,34 @@
-import { collection, doc, getDoc, getDocs, query, where } from 'firebase/firestore';
+import { collection, doc, getDoc, getDocs, query, serverTimestamp, updateDoc, where } from 'firebase/firestore';
 import { RIDE_STATUS } from '../config/constants';
 import { db, requireFirebase } from './firebase';
 import { toRide } from './rideService';
+
+// El conductor decide si recibe solicitudes. Se guarda en su perfil para que
+// el estado sobreviva a reinicios y se vea igual desde cualquier dispositivo.
+export const setDriverAvailability = async (uid, isAvailable, location = null) => {
+  const data = { isAvailable, availabilityUpdatedAt: serverTimestamp() };
+
+  if (location) {
+    data.driverLocation = {
+      latitude: location.latitude,
+      longitude: location.longitude,
+    };
+    data.locationUpdatedAt = serverTimestamp();
+  }
+
+  await updateDoc(doc(db, 'users', uid), data);
+};
+
+// Posición mientras está disponible (se escribe con límite de frecuencia).
+export const updateDriverLocation = async (uid, location) => {
+  await updateDoc(doc(db, 'users', uid), {
+    driverLocation: {
+      latitude: location.latitude,
+      longitude: location.longitude,
+    },
+    locationUpdatedAt: serverTimestamp(),
+  });
+};
 
 // Perfil + estadísticas calculadas sobre los viajes del usuario.
 export const getStats = async () => {

@@ -150,13 +150,19 @@ npm run test:pricing
 - El pasajero busca un destino, ve la estimación y solicita el viaje.
 - El conductor ve las solicitudes en tiempo real (`onSnapshot`), acepta, marca
   *Voy en camino*, *Pasajero a bordo*, finaliza y cobra en efectivo.
+- **Disponible / No disponible**: el conductor activa el interruptor y la app empieza a
+  seguir su ubicación (`expo-location`) y a escuchar solicitudes; el estado se guarda en
+  `users/{uid}.isAvailable`.
+- Cada solicitud entrante tiene una **cuenta regresiva de 15 segundos** con barra de
+  progreso; al llegar a cero desaparece de la pantalla.
+- Al aceptar, el viaje guarda una copia del conductor y su vehículo, y el pasajero ve
+  **nombre, marca/línea, color, tipo de vehículo y placa**.
 - Estados del viaje: `requested → accepted → driver_arriving → in_progress →
   completed → paid` (o `cancelled`).
 - Perfil con estadísticas calculadas sobre los viajes.
 
-Pendiente de la especificación completa: interruptor Disponible/No disponible con
-seguimiento de ubicación, temporizador de 15 segundos, pantalla de ganancias, historial con
-filtros y notificaciones push.
+Pendiente de la especificación completa: pantalla de ganancias, historial con filtros,
+pagos con tarjeta (Mercado Pago/Stripe en modo prueba) y notificaciones push.
 
 Pruebas (tarifas y validaciones):
 

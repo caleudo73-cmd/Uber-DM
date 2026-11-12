@@ -1,12 +1,14 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import * as rideService from '../services/rideService';
+import { isExpired } from '../utils/countdown';
 import useAsyncAction from './useAsyncAction';
 import useAuth from './useAuth';
 
-export default function useDriverRides() {
+export default function useDriverRides({ isAvailable = true } = {}) {
   const { user } = useAuth();
   const [currentRide, setCurrentRide] = useState(null);
   const [available, setAvailable] = useState([]);
+  const [dismissed, setDismissed] = useState(() => new Set());
   const [subscriptionError, setSubscriptionError] = useState(null);
 
   // Viaje activo del conductor en tiempo real.
@@ -15,12 +17,33 @@ export default function useDriverRides() {
     return rideService.subscribeCurrentRide(user.id, setCurrentRide, setSubscriptionError);
   }, [user?.id]);
 
-  // Solo escucha solicitudes nuevas cuando el conductor está libre.
+  // Solo escucha solicitudes nuevas cuando está disponible y libre.
   const busy = Boolean(currentRide);
   useEffect(() => {
-    if (!user || busy) return undefined;
+    if (!user || busy || !isAvailable) {
+      setAvailable([]);
+      return undefined;
+    }
     return rideService.subscribeAvailableRides(setAvailable, setSubscriptionError);
-  }, [user?.id, busy]);
+  }, [user?.id, busy, isAvailable]);
+
+  // La solicitud desaparece cuando se acaba su cuenta regresiva.
+  const dismiss = useCallback((id) => {
+    setDismissed((current) => {
+      if (current.has(id)) return current;
+      const next = new Set(current);
+      next.add(id);
+      return next;
+    });
+  }, []);
+
+  const visibleRides = useMemo(
+    () =>
+      available.filter(
+        (ride) => !dismissed.has(ride.id) && !isExpired(ride.createdAt)
+      ),
+    [available, dismissed]
+  );
 
   const accept = useAsyncAction(rideService.acceptRide);
   const arriving = useAsyncAction(rideService.markDriverArriving);
@@ -38,7 +61,8 @@ export default function useDriverRides() {
 
   return {
     currentRide,
-    available,
+    available: visibleRides,
+    dismiss,
     accept: acceptRide,
     arriving: markArriving,
     start: startRide,

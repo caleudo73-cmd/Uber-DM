@@ -2,6 +2,7 @@ import {
   addDoc,
   collection,
   doc,
+  getDoc,
   limit,
   onSnapshot,
   query,
@@ -73,6 +74,7 @@ export const requestRide = async (origin, destination, options = {}) => {
     passengerName: user.displayName || 'Pasajero',
     driverId: null,
     driverName: null,
+    driver: null,
     participants: [user.uid],
     origin: toPoint(origin),
     destination: toPoint(destination),
@@ -140,6 +142,13 @@ export const acceptRide = async (rideId) => {
   const user = auth.currentUser;
   if (!user) throw new Error('Debes iniciar sesión');
 
+  // Copiamos nombre y vehículo al viaje: el pasajero debe ver con qué carro
+  // lo recogen y el dato no puede cambiar a mitad del servicio.
+  const profileSnapshot = await getDoc(doc(db, 'users', user.uid));
+  const profile = profileSnapshot.exists() ? profileSnapshot.data() : {};
+  const vehicle = profile.vehicle ?? null;
+  const driverName = profile.name ?? user.displayName ?? 'Conductor';
+
   const ref = doc(db, TRIPS, rideId);
   await runTransaction(db, async (transaction) => {
     const snapshot = await transaction.get(ref);
@@ -150,7 +159,22 @@ export const acceptRide = async (rideId) => {
 
     transaction.update(ref, {
       driverId: user.uid,
-      driverName: user.displayName || 'Conductor',
+      driverName,
+      driver: {
+        id: user.uid,
+        name: driverName,
+        phone: profile.phone ?? null,
+        vehicle: vehicle
+          ? {
+              brand: vehicle.brand ?? null,
+              line: vehicle.line ?? null,
+              year: vehicle.year ?? null,
+              plate: vehicle.plate ?? null,
+              color: vehicle.color ?? null,
+              category: vehicle.category ?? null,
+            }
+          : null,
+      },
       participants: [trip.passengerId, user.uid],
       status: RIDE_STATUS.ACCEPTED,
       acceptedAt: serverTimestamp(),
