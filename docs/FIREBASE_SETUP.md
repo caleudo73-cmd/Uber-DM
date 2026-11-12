@@ -142,6 +142,18 @@ Debe terminar con `Deploy complete!`.
 
 ### Opción A — script (recomendada)
 
+Desde la raíz del proyecto, con `mobile/.env` ya configurado:
+
+```powershell
+cd C:\Users\genie\Desktop\uber-app
+node firebase\scripts\seed-demo-users.mjs
+```
+
+Crea los dos usuarios en Authentication y sus documentos en `users` con
+`approvalStatus: "approved"`. No necesita service account.
+
+### Opción B — con service account (equivalente)
+
 1. En Firebase: **Configuración del proyecto → Cuentas de servicio**.
 2. **Generar nueva clave privada** → se descarga un `.json`.
 3. Guárdalo **fuera del repositorio**, por ejemplo:
