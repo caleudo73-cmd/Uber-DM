@@ -7,6 +7,7 @@ import ConfirmPanel from '../components/ConfirmPanel';
 import DestinationModal from '../components/DestinationModal';
 import ErrorText from '../components/ErrorText';
 import IdlePanel from '../components/IdlePanel';
+import RatingModal from '../components/RatingModal';
 import RideMap from '../components/RideMap';
 import TestPaymentModal from '../components/TestPaymentModal';
 import TopBar from '../components/TopBar';
@@ -87,6 +88,15 @@ export default function PassengerHomeScreen({ navigation }) {
         onApprove={rideState.pay}
         onReject={rideState.pay}
         onClose={rideState.closePayment}
+      />
+
+      <RatingModal
+        visible={!!rideState.ratingRide}
+        ride={rideState.ratingRide}
+        loading={rideState.ratingLoading}
+        error={rideState.ratingError}
+        onRate={rideState.rate}
+        onClose={rideState.closeRating}
       />
     </View>
   );

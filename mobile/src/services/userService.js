@@ -47,7 +47,11 @@ export const getStats = async () => {
     [RIDE_STATUS.COMPLETED, RIDE_STATUS.PAID].includes(ride.status)
   );
   const cancelled = rides.filter((ride) => ride.status === RIDE_STATUS.CANCELLED);
-  const received = completed.map((ride) => ride.rating).filter((value) => value > 0);
+  // Solo cuentan las calificaciones que el usuario recibió como conductor.
+  const received = completed
+    .filter((ride) => ride.driverId === user.uid)
+    .map((ride) => ride.rating)
+    .filter((value) => value > 0);
 
   return {
     user: {

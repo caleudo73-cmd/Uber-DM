@@ -17,6 +17,11 @@ export const ACTIVE_STATUSES = [
   RIDE_STATUS.IN_PROGRESS,
 ];
 
+// Estados que se muestran como viaje en curso en la pantalla principal.
+// `completed` sigue visible porque todavía falta pagar (tarjeta o efectivo) y,
+// después del pago, el pasajero puede calificar al conductor.
+export const CURRENT_RIDE_STATUSES = [...ACTIVE_STATUSES, RIDE_STATUS.COMPLETED];
+
 export const RIDE_STATUS_LABEL = {
   requested: 'Buscando conductor...',
   accepted: 'Conductor aceptó el viaje',

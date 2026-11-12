@@ -75,6 +75,19 @@ service cloud.firestore {
               )
             )
           )
+        )
+        // La calificación la escribe el pasajero, solo cuando el viaje terminó
+        // y con un entero de 1 a 5 estrellas.
+        && (
+          !request.resource.data.diff(resource.data).affectedKeys()
+            .hasAny(['rating', 'ratedAt'])
+          || (
+            resource.data.passengerId == request.auth.uid
+            && resource.data.status in ['completed', 'paid']
+            && request.resource.data.rating is int
+            && request.resource.data.rating >= 1
+            && request.resource.data.rating <= 5
+          )
         );
 
       allow delete: if false;

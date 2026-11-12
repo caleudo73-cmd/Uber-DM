@@ -11,7 +11,7 @@ import {
   where,
 } from 'firebase/firestore';
 import {
-  ACTIVE_STATUSES,
+  CURRENT_RIDE_STATUSES,
   PAYMENT_METHOD,
   PAYMENT_STATUS,
   RIDE_STATUS,
@@ -19,6 +19,7 @@ import {
 import { DEFAULT_CATEGORY, PRICING } from '../config/pricing';
 import { calculateFare } from '../utils/calculateFare';
 import { distanceKm, estimateDurationMin } from '../utils/geo';
+import { isValidRating } from '../utils/ratings';
 import { db, requireFirebase } from './firebase';
 
 const TRIPS = 'trips';
@@ -108,9 +109,12 @@ export const subscribeCurrentRide = (userId, onChange, onError) => {
   return onSnapshot(
     q,
     (snapshot) => {
+      // Puede haber más de un viaje en curso (por ejemplo, uno completado sin
+      // pagar). Se muestra siempre el más reciente.
       const active = snapshot.docs
         .map(toRide)
-        .filter((trip) => ACTIVE_STATUSES.includes(trip.status));
+        .filter((trip) => CURRENT_RIDE_STATUSES.includes(trip.status))
+        .sort((a, b) => new Date(b.createdAt ?? 0) - new Date(a.createdAt ?? 0));
       onChange(active[0] ?? null);
     },
     (error) => onError?.(error.message)
@@ -279,4 +283,37 @@ export const cancelRide = async (rideId) => {
   });
 
   return { id: rideId };
+};
+
+// El pasajero califica al conductor una sola vez, cuando el viaje terminó.
+export const rateRide = async (rideId, rating) => {
+  const { auth, db } = requireFirebase();
+  const user = auth.currentUser;
+  if (!user) throw new Error('Debes iniciar sesión');
+
+  const value = Math.round(Number(rating));
+  if (!isValidRating(value)) throw new Error('La calificación debe ser de 1 a 5 estrellas');
+
+  const ref = doc(db, TRIPS, rideId);
+  await runTransaction(db, async (transaction) => {
+    const snapshot = await transaction.get(ref);
+    if (!snapshot.exists()) throw new Error('Ese viaje ya no existe');
+
+    const trip = snapshot.data();
+    if (trip.passengerId !== user.uid) {
+      throw new Error('Solo el pasajero puede calificar el viaje');
+    }
+    if (![RIDE_STATUS.COMPLETED, RIDE_STATUS.PAID].includes(trip.status)) {
+      throw new Error('El viaje todavía no ha terminado');
+    }
+    if (trip.rating) throw new Error('Este viaje ya fue calificado');
+
+    transaction.update(ref, {
+      rating: value,
+      ratedAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    });
+  });
+
+  return { id: rideId, rating: value };
 };

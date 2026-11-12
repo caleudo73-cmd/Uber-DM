@@ -190,6 +190,10 @@ npm run test:pricing
 - **Pago con tarjeta (prueba)**: al finalizar, el pasajero toca *Pagar con tarjeta (prueba)*,
   se abre un checkout simulado y el viaje pasa a `paid` al aprobar. El conductor ve
   *Esperando el pago de prueba del pasajero…* mientras tanto. No se cobra dinero real.
+- **Calificación**: al aprobar el pago se abre un modal para calificar al conductor con 1 a 5
+  estrellas. También se puede calificar después desde **Historial → Detalle del viaje**. La
+  calificación se guarda en `trips.rating`, solo la puede escribir el pasajero y una sola vez;
+  el promedio aparece en el perfil del conductor.
 - Perfil con estadísticas calculadas sobre los viajes.
 - **Ganancias** (conductor): totales de Hoy / Semana / Mes con ganancia neta, tarifas
   cobradas, comisión de la plataforma y propinas. Se calcula en el teléfono a partir de los
@@ -200,11 +204,9 @@ npm run test:pricing
 - **Detalle del viaje**: recorrido, distancia, duración, categoría, tarifa, comisión,
   propina, ganancia del conductor, método y estado del pago, y datos del vehículo.
 
-Pendiente de la especificación completa: notificaciones push. Mejora opcional: calificación
-del pasajero al conductor (hoy el promedio se calcula sobre `trips.rating`, pero no hay
-pantalla para calificar).
+Pendiente de la especificación completa: notificaciones push.
 
-Pruebas (tarifas, validaciones, cuenta regresiva, ganancias, historial y pagos):
+Pruebas (tarifas, validaciones, cuenta regresiva, ganancias, historial, pagos y calificación):
 
 ```bash
 cd mobile

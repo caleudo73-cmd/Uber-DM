@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import theme from '../config/theme';
 import {
@@ -7,7 +8,14 @@ import {
 } from '../config/constants';
 import { CATEGORY_LABEL } from '../config/pricing';
 import { formatDateTime, formatKm, formatPrice } from '../utils/format';
+import { canRateRide, canShowRating, ratingLabel } from '../utils/ratings';
+import * as rideService from '../services/rideService';
+import Button from '../components/Button';
+import ErrorText from '../components/ErrorText';
+import RatingInput from '../components/RatingInput';
 import ScreenContainer from '../components/ScreenContainer';
+import StarRating from '../components/StarRating';
+import useAuth from '../hooks/useAuth';
 
 const { colors, spacing, radius, fontSize, fontWeight } = theme;
 
@@ -31,7 +39,30 @@ function Section({ title, children }) {
 
 export default function RideDetailScreen({ route }) {
   const { ride } = route.params;
+  const { user } = useAuth();
   const vehicle = ride.driver?.vehicle;
+
+  // La ruta trae una copia del viaje; la calificación se actualiza en local.
+  const [rating, setRating] = useState(ride.rating ?? 0);
+  const [selected, setSelected] = useState(0);
+  const [saving, setSaving] = useState(false);
+  const [ratingError, setRatingError] = useState(null);
+
+  const isPassenger = user?.id === ride.passengerId;
+  const canRate = canRateRide({ ...ride, rating }, user?.id);
+
+  const submitRating = async () => {
+    setSaving(true);
+    setRatingError(null);
+    try {
+      const result = await rideService.rateRide(ride.id, selected);
+      setRating(result.rating);
+    } catch (error) {
+      setRatingError(error.message);
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <ScreenContainer padded={false}>
@@ -81,6 +112,44 @@ export default function RideDetailScreen({ route }) {
           ) : null}
         </Section>
 
+        {canShowRating(ride) ? (
+          <Section title="Calificación">
+            {rating > 0 ? (
+              <>
+                <View style={styles.ratingRow}>
+                  <StarRating value={rating} />
+                  <Text style={styles.ratingValue}>{rating}.0</Text>
+                </View>
+                <Text style={styles.ratingNote}>
+                  {isPassenger
+                    ? 'Tu calificación para el conductor.'
+                    : 'Calificación que dejó el pasajero.'}
+                </Text>
+              </>
+            ) : canRate ? (
+              <>
+                <Text style={styles.ratingNote}>
+                  ¿Cómo estuvo el viaje con {ride.driverName ?? 'tu conductor'}?
+                </Text>
+                <View style={styles.ratingRow}>
+                  <RatingInput value={selected} onChange={setSelected} />
+                  <Text style={styles.ratingValue}>{ratingLabel(selected) ?? ''}</Text>
+                </View>
+                <ErrorText message={ratingError} />
+                <Button
+                  title="Enviar calificación"
+                  variant="accent"
+                  disabled={!selected}
+                  loading={saving}
+                  onPress={submitRating}
+                />
+              </>
+            ) : (
+              <Text style={styles.ratingNote}>Sin calificación.</Text>
+            )}
+          </Section>
+        ) : null}
+
         <Text style={styles.note}>
           La tarifa y la comisión se congelan al finalizar el viaje con la misma función que
           usa la estimación del pasajero.
@@ -111,5 +180,13 @@ const styles = StyleSheet.create({
   value: { color: colors.textPrimary, fontSize: fontSize.sm, textAlign: 'right' },
   strong: { fontWeight: fontWeight.bold, fontSize: fontSize.md },
   divider: { height: 1, backgroundColor: colors.border, marginVertical: spacing.sm },
+  ratingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginBottom: spacing.sm,
+  },
+  ratingValue: { fontSize: fontSize.md, fontWeight: fontWeight.bold, color: colors.textPrimary },
+  ratingNote: { color: colors.textSecondary, fontSize: fontSize.sm, lineHeight: 18, marginBottom: spacing.sm },
   note: { color: colors.textSecondary, fontSize: fontSize.sm, lineHeight: 20 },
 });
