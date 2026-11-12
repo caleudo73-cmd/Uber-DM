@@ -18,13 +18,34 @@ import useDriverRides from '../hooks/useDriverRides';
 
 const { colors, spacing, radius, fontSize, fontWeight } = theme;
 
-function PendingApproval() {
+function PendingApproval({ user, onSignOut }) {
+  const vehicle = user?.vehicle;
+  const soat = user?.documents?.soat;
+
   return (
     <View style={styles.pending}>
-      <Text style={styles.status}>Cuenta pendiente de aprobación</Text>
+      <Text style={styles.status}>Solicitud enviada</Text>
       <Text style={styles.meta}>
-        Un administrador debe aprobar tu registro antes de que puedas recibir solicitudes de viaje.
+        Tu cuenta quedó en estado Pendiente. Un administrador revisará tus documentos antes de
+        activar tu cuenta de conductor.
       </Text>
+
+      <View style={styles.summary}>
+        <Text style={styles.summaryTitle}>Resumen del registro</Text>
+        <Text style={styles.summaryLine}>Documento: {user?.documentNumber ?? '—'}</Text>
+        <Text style={styles.summaryLine}>
+          Vehículo:{' '}
+          {vehicle
+            ? `${vehicle.brand ?? ''} ${vehicle.line ?? ''} ${vehicle.year ?? ''} · ${vehicle.plate ?? ''}`
+            : '—'}
+        </Text>
+        <Text style={styles.summaryLine}>
+          SOAT vigente hasta: {soat?.expiresAt ?? '—'}
+        </Text>
+        <Text style={styles.summaryLine}>Ciudad: {user?.city ?? '—'}</Text>
+      </View>
+
+      <Button title="Cerrar sesión" variant="ghost" onPress={onSignOut} />
     </View>
   );
 }
@@ -129,7 +150,7 @@ function AvailableRides({ rides, driver }) {
 }
 
 export default function DriverHomeScreen({ navigation }) {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const driver = useDriverRides();
   const { currentRide, available } = driver;
 
@@ -139,7 +160,7 @@ export default function DriverHomeScreen({ navigation }) {
         <TopBar onProfile={() => navigation.navigate('Profile')} />
         <View style={styles.bottom}>
           <BottomSheet>
-            <PendingApproval />
+            <PendingApproval user={user} onSignOut={signOut} />
           </BottomSheet>
         </View>
       </View>
@@ -169,6 +190,19 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   bottom: { position: 'absolute', left: 0, right: 0, bottom: 0, maxHeight: '60%' },
   pending: { paddingVertical: spacing.md },
+  summary: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+  },
+  summaryTitle: {
+    fontSize: fontSize.sm,
+    fontWeight: fontWeight.bold,
+    color: colors.textPrimary,
+    marginBottom: spacing.xs,
+  },
+  summaryLine: { fontSize: fontSize.sm, color: colors.textSecondary, marginBottom: 2 },
   status: {
     fontSize: fontSize.lg,
     fontWeight: fontWeight.bold,

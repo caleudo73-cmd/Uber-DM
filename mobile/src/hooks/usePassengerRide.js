@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
-import { DEFAULT_CATEGORY, PAYMENT_METHOD } from '../config/constants';
+import { PAYMENT_METHOD } from '../config/constants';
+import { DEFAULT_CATEGORY } from '../config/pricing';
 import * as rideService from '../services/rideService';
 import useAsyncAction from './useAsyncAction';
 import useAuth from './useAuth';

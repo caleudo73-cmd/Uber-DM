@@ -16,6 +16,16 @@ service cloud.firestore {
         && request.resource.data.role == resource.data.role
         && request.resource.data.approvalStatus == resource.data.approvalStatus;
       allow delete: if false;
+
+      // Fotos de documentos del conductor (licencia, SOAT, tecnomecánica).
+      // Solo el dueño del perfil puede leerlas o reemplazarlas.
+      match /documents/{documentId} {
+        allow read, delete: if signedIn() && request.auth.uid == userId;
+        allow create, update: if signedIn()
+          && request.auth.uid == userId
+          && request.resource.data.base64 is string
+          && request.resource.data.base64.size() < 400000;
+      }
     }
 
     // Viajes: los participantes leen, el pasajero crea y ambos actualizan.

@@ -6,7 +6,14 @@
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "plugins": [
-      "expo-status-bar"
+      "expo-status-bar",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "La app usa tus fotos para adjuntar los documentos del vehículo.",
+          "cameraPermission": "La app usa la cámara para fotografiar los documentos del vehículo."
+        }
+      ]
     ]
   }
 }

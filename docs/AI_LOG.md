@@ -56,3 +56,37 @@ Reglas:
 
 > Borrador generado durante la sesión de trabajo. El integrante debe revisarlo, completar
 > los campos y confirmar que la descripción corresponde a lo que realmente se hizo.
+
+---
+
+### Entrada #2 - Fecha: 2026-11-11 - Integrante: (completar) - Herramienta: Asistente de código (Big Pickle / OpenCode)
+
+- **Objetivo:** Implementar el registro del conductor en tres pestañas (Datos personales,
+  Vehículo, Documentos) con validaciones por campo, fotos de los documentos y estado
+  Pendiente de aprobación.
+- **Prompt:** Tras la migración se preguntó qué construir y se eligió: «Registro del
+  conductor en 3 pestañas (Recomendado)».
+- **Resumen de la respuesta:** Se creó un formulario de tres pasos con pestañas numeradas,
+  validaciones puras en `src/utils/validators.js` (nombre y apellido, correo, contraseña,
+  documento, edad 18–80, celular colombiano, placa de carro o moto, año del vehículo y
+  vigencia de licencia, SOAT y tecnomecánica), un selector de fotos que comprime las
+  imágenes y las guarda en la subcolección `users/{uid}/documents`, y una pantalla de
+  «Solicitud enviada» con el resumen del registro y opción de cerrar sesión.
+- **Qué se usó / modificó / descartó:** Se usó el modelo de datos y las validaciones de la
+  especificación. Se descartó subir fotos a Firebase Storage porque el plan Spark no lo
+  incluye; se guardan comprimidas en Firestore (máx. ~240 KB cada una) con una regla que
+  limita el tamaño. También se corrigió un import roto de `DEFAULT_CATEGORY` que guardaba
+  los viajes sin categoría.
+- **Archivos y commit:** `mobile/src/utils/validators.js`,
+  `mobile/src/config/driverRegistration.js`, `mobile/src/hooks/useDriverRegisterForm.js`,
+  `mobile/src/components/DriverRegisterForm.js`, `mobile/src/components/TabBar.js`,
+  `mobile/src/components/PhotoPicker.js`, `mobile/src/components/Input.js`,
+  `mobile/src/screens/RegisterScreen.js`, `mobile/src/screens/DriverHomeScreen.js`,
+  `mobile/src/services/authService.js`, `firebase/firestore.rules`,
+  `mobile/scripts/validators.test.mjs` — commit: PENDIENTE.
+- **Verificación:** `cd mobile && npm test` → 8/8 pruebas de tarifas y 12/12 de validaciones.
+  Bundle de Android sin errores (1067 módulos). Prueba real contra Firestore con las reglas
+  desplegadas: perfil de conductor creado, foto de 200 KB aceptada, foto de 450 KB
+  rechazada, cambio de rol bloqueado y lectura de la foto correcta; el usuario de prueba se
+  eliminó al final.
+- **Aprendizaje:** (completar) Qué entendí del registro por pasos y qué haría distinto.

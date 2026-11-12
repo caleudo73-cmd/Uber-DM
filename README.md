@@ -141,6 +141,12 @@ npm run test:pricing
 ## 6. Flujo actual
 
 - Registro e inicio de sesión con Firebase Auth.
+- **Registro de conductor en tres pestañas** (Datos personales, Vehículo, Documentos) con
+  validaciones por campo: nombre y apellido, correo, contraseña, documento, edad entre 18 y
+  80 años, celular, dirección, placa, año del vehículo y vigencia de licencia, SOAT y
+  tecnomecánica. Las fotos se comprimen y se guardan en `users/{uid}/documents`.
+- El conductor queda en estado **Pendiente** hasta que un administrador cambie
+  `approvalStatus` a `approved` en Firestore.
 - El pasajero busca un destino, ve la estimación y solicita el viaje.
 - El conductor ve las solicitudes en tiempo real (`onSnapshot`), acepta, marca
   *Voy en camino*, *Pasajero a bordo*, finaliza y cobra en efectivo.
@@ -148,9 +154,16 @@ npm run test:pricing
   completed → paid` (o `cancelled`).
 - Perfil con estadísticas calculadas sobre los viajes.
 
-Pendiente de la especificación completa: registro del conductor en tres pestañas con
-documentos, interruptor Disponible/No disponible con seguimiento de ubicación, temporizador
-de 15 segundos, pantalla de ganancias, historial con filtros y notificaciones push.
+Pendiente de la especificación completa: interruptor Disponible/No disponible con
+seguimiento de ubicación, temporizador de 15 segundos, pantalla de ganancias, historial con
+filtros y notificaciones push.
+
+Pruebas (tarifas y validaciones):
+
+```bash
+cd mobile
+npm test
+```
 
 ## 7. Uso de IA
 

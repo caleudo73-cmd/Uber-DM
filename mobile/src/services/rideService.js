@@ -11,12 +11,11 @@ import {
 } from 'firebase/firestore';
 import {
   ACTIVE_STATUSES,
-  DEFAULT_CATEGORY,
   PAYMENT_METHOD,
   PAYMENT_STATUS,
   RIDE_STATUS,
 } from '../config/constants';
-import { PRICING } from '../config/pricing';
+import { DEFAULT_CATEGORY, PRICING } from '../config/pricing';
 import { calculateFare } from '../utils/calculateFare';
 import { distanceKm, estimateDurationMin } from '../utils/geo';
 import { db, requireFirebase } from './firebase';
