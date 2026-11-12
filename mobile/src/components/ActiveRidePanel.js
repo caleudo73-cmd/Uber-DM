@@ -27,7 +27,7 @@ export default function ActiveRidePanel({ ride, canCancel, loading, onCancel }) 
         </View>
       )}
 
-      <RideSummary distanceKm={ride.distanceKm} price={ride.price} currency={ride.currency} />
+      <RideSummary distanceKm={ride.distanceKm} fare={ride.fare} currency={ride.currency} />
       {canCancel && <Button title="Cancelar viaje" variant="ghost" onPress={onCancel} loading={loading} />}
     </>
   );

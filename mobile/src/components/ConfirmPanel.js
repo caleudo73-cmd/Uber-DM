@@ -25,7 +25,7 @@ export default function ConfirmPanel({ destination, quote, loading, onConfirm, o
           <Text style={styles.name}>Económico</Text>
           <Text style={styles.meta}>{quote ? formatKm(quote.distanceKm) : 'Calculando...'}</Text>
         </View>
-        <Text style={styles.price}>{quote ? formatPrice(quote.price, quote.currency) : '—'}</Text>
+        <Text style={styles.price}>{quote ? formatPrice(quote.fare, quote.currency) : '—'}</Text>
       </View>
 
       <View style={styles.payment}>

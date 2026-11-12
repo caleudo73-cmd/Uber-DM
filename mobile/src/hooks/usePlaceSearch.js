@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { searchPlaces } from '../services/placesService';
+import { search } from '../services/placesService';
 
 const MIN_CHARS = 3;
 const DEBOUNCE_MS = 450;
@@ -27,7 +27,7 @@ export default function usePlaceSearch(location) {
       setLoading(true);
       setError(null);
       try {
-        const { places } = await searchPlaces(text, location);
+        const { places } = await search(text, location);
         if (id === requestId.current) setResults(places);
       } catch (e) {
         if (id === requestId.current) {

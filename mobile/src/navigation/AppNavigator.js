@@ -5,6 +5,7 @@ import theme from '../config/theme';
 import { ROLES } from '../config/constants';
 import useAuth from '../hooks/useAuth';
 import DriverHomeScreen from '../screens/DriverHomeScreen';
+import FirebaseConfigScreen from '../screens/FirebaseConfigScreen';
 import LoginScreen from '../screens/LoginScreen';
 import PassengerHomeScreen from '../screens/PassengerHomeScreen';
 import ProfileScreen from '../screens/ProfileScreen';
@@ -13,7 +14,9 @@ import RegisterScreen from '../screens/RegisterScreen';
 const Stack = createNativeStackNavigator();
 
 export default function AppNavigator() {
-  const { user, booting } = useAuth();
+  const { user, booting, configError } = useAuth();
+
+  if (configError) return <FirebaseConfigScreen message={configError} />;
 
   if (booting) {
     return (

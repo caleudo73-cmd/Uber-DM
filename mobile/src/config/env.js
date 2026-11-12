@@ -1,6 +1,17 @@
-import Constants from 'expo-constants';
+// Configuración leída de mobile/.env (Expo solo inyecta variables EXPO_PUBLIC_*).
+// Copia mobile/.env.example a mobile/.env y completa los valores del proyecto Firebase.
 
-// Expo Go ya conoce la IP de tu PC (la del servidor de Expo): no hay que escribirla a mano.
-const host = Constants.expoConfig?.hostUri?.split(':')[0] ?? 'localhost';
+export const FIREBASE_CONFIG = {
+  apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY ?? '',
+  authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN ?? '',
+  projectId: process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID ?? '',
+  storageBucket: process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET ?? '',
+  messagingSenderId: process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID ?? '',
+  appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID ?? '',
+};
 
-export const API_URL = `http://${host}:4000`;
+export const USE_FIREBASE_EMULATOR = process.env.EXPO_PUBLIC_FIREBASE_EMULATOR === 'true';
+
+export const missingFirebaseKeys = Object.entries(FIREBASE_CONFIG)
+  .filter(([, value]) => !value)
+  .map(([key]) => key);

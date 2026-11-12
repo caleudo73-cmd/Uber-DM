@@ -1,43 +1,64 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import * as rideService from '../services/rideService';
 import useAsyncAction from './useAsyncAction';
-import usePolling from './usePolling';
+import useAuth from './useAuth';
 
 export default function useDriverRides() {
+  const { user } = useAuth();
   const [currentRide, setCurrentRide] = useState(null);
   const [available, setAvailable] = useState([]);
+  const [subscriptionError, setSubscriptionError] = useState(null);
 
-  const refresh = useCallback(async () => {
-    const { ride } = await rideService.getCurrentRide();
-    setCurrentRide(ride);
-    if (!ride) setAvailable((await rideService.getAvailableRides()).rides);
-  }, []);
+  // Viaje activo del conductor en tiempo real.
+  useEffect(() => {
+    if (!user) return undefined;
+    return rideService.subscribeCurrentRide(user.id, setCurrentRide, setSubscriptionError);
+  }, [user?.id]);
 
-  usePolling(() => refresh().catch(() => {}), true);
+  // Solo escucha solicitudes nuevas cuando el conductor está libre.
+  const busy = Boolean(currentRide);
+  useEffect(() => {
+    if (!user || busy) return undefined;
+    return rideService.subscribeAvailableRides(setAvailable, setSubscriptionError);
+  }, [user?.id, busy]);
 
-  // Acción de transición: ejecuta, actualiza el viaje actual y refresca
-  const transition = useCallback(
-    (service) => async (id) => {
-      const { ride } = await service(id);
-      setCurrentRide(ride.status === 'completed' || ride.status === 'cancelled' ? null : ride);
-      await refresh();
-    },
-    [refresh]
-  );
+  const accept = useAsyncAction(rideService.acceptRide);
+  const arriving = useAsyncAction(rideService.markDriverArriving);
+  const start = useAsyncAction(rideService.startRide);
+  const complete = useAsyncAction(rideService.completeRide);
+  const cancel = useAsyncAction(rideService.cancelRide);
+  const cashPaid = useAsyncAction(rideService.markCashPaid);
 
-  const accept = useAsyncAction(transition(rideService.acceptRide));
-  const start = useAsyncAction(transition(rideService.startRide));
-  const complete = useAsyncAction(transition(rideService.completeRide));
-  const cancel = useAsyncAction(transition(rideService.cancelRide));
+  const acceptRide = useCallback((id) => accept.run(id), [accept.run]);
+  const markArriving = useCallback((id) => arriving.run(id), [arriving.run]);
+  const startRide = useCallback((id) => start.run(id), [start.run]);
+  const completeRide = useCallback((id) => complete.run(id), [complete.run]);
+  const cancelRide = useCallback((id) => cancel.run(id), [cancel.run]);
+  const markCashPaid = useCallback((id) => cashPaid.run(id), [cashPaid.run]);
 
   return {
     currentRide,
     available,
-    accept: accept.run,
-    start: start.run,
-    complete: complete.run,
-    cancel: cancel.run,
-    loading: accept.loading || start.loading || complete.loading || cancel.loading,
-    error: accept.error || start.error || complete.error || cancel.error,
+    accept: acceptRide,
+    arriving: markArriving,
+    start: startRide,
+    complete: completeRide,
+    cancel: cancelRide,
+    cashPaid: markCashPaid,
+    loading:
+      accept.loading ||
+      arriving.loading ||
+      start.loading ||
+      complete.loading ||
+      cancel.loading ||
+      cashPaid.loading,
+    error:
+      accept.error ||
+      arriving.error ||
+      start.error ||
+      complete.error ||
+      cancel.error ||
+      cashPaid.error ||
+      subscriptionError,
   };
 }

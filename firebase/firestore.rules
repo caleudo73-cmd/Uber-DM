@@ -1,0 +1,45 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    // Perfil del usuario. El rol y el estado de aprobación solo se cambian
+    // desde la consola de Firebase (por eso no se permite modificarlos aquí).
+    match /users/{userId} {
+      allow read: if signedIn();
+      allow create: if signedIn() && request.auth.uid == userId;
+      allow update: if signedIn()
+        && request.auth.uid == userId
+        && request.resource.data.role == resource.data.role
+        && request.resource.data.approvalStatus == resource.data.approvalStatus;
+      allow delete: if false;
+    }
+
+    // Viajes: los participantes leen, el pasajero crea y ambos actualizan.
+    // Las transiciones de estado se validan en la app; para producción conviene
+    // mover la máquina de estados a una Cloud Function.
+    match /trips/{tripId} {
+      allow read: if signedIn();
+
+      allow create: if signedIn()
+        && request.resource.data.passengerId == request.auth.uid
+        && request.resource.data.status == 'requested'
+        && request.resource.data.participants == [request.auth.uid];
+
+      allow update: if signedIn()
+        && (
+          resource.data.passengerId == request.auth.uid
+          || resource.data.driverId == request.auth.uid
+          || (
+            resource.data.status == 'requested'
+            && request.resource.data.driverId == request.auth.uid
+          )
+        );
+
+      allow delete: if false;
+    }
+  }
+}

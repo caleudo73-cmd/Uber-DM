@@ -1,15 +1,248 @@
-import { authRequest } from './http';
+import {
+  addDoc,
+  collection,
+  doc,
+  limit,
+  onSnapshot,
+  query,
+  runTransaction,
+  serverTimestamp,
+  where,
+} from 'firebase/firestore';
+import {
+  ACTIVE_STATUSES,
+  DEFAULT_CATEGORY,
+  PAYMENT_METHOD,
+  PAYMENT_STATUS,
+  RIDE_STATUS,
+} from '../config/constants';
+import { PRICING } from '../config/pricing';
+import { calculateFare } from '../utils/calculateFare';
+import { distanceKm, estimateDurationMin } from '../utils/geo';
+import { db, requireFirebase } from './firebase';
 
-export const quoteRide = (origin, destination) =>
-  authRequest('/rides/quote', { method: 'POST', body: { origin, destination } });
+const TRIPS = 'trips';
 
-export const requestRide = (origin, destination) =>
-  authRequest('/rides', { method: 'POST', body: { origin, destination } });
+const toISO = (value) => (value?.toDate ? value.toDate().toISOString() : value ?? null);
 
-export const getCurrentRide = () => authRequest('/rides/current');
-export const getAvailableRides = () => authRequest('/rides/available');
+const toPoint = (point) => ({
+  latitude: point.latitude,
+  longitude: point.longitude,
+  name: typeof point.name === 'string' ? point.name.slice(0, 120) : null,
+});
 
-export const acceptRide = (id) => authRequest(`/rides/${id}/accept`, { method: 'POST' });
-export const startRide = (id) => authRequest(`/rides/${id}/start`, { method: 'POST' });
-export const completeRide = (id) => authRequest(`/rides/${id}/complete`, { method: 'POST' });
-export const cancelRide = (id) => authRequest(`/rides/${id}/cancel`, { method: 'POST' });
+export const toRide = (snapshot) => {
+  const data = snapshot.data();
+  return {
+    id: snapshot.id,
+    ...data,
+    createdAt: toISO(data.createdAt),
+    acceptedAt: toISO(data.acceptedAt),
+    completedAt: toISO(data.completedAt),
+  };
+};
+
+const quoteFor = (origin, destination, category, tip = 0) => {
+  const km = distanceKm(origin, destination);
+  const durationMin = estimateDurationMin(km);
+  const result = calculateFare({ distanceKm: km, durationMin, category, tip });
+  return {
+    distanceKm: +km.toFixed(2),
+    durationMin,
+    category,
+    currency: PRICING.CURRENCY,
+    tip: Math.round(Number(tip) || 0),
+    ...result,
+  };
+};
+
+// La estimación usa la misma función pura que el cierre del viaje.
+export const quoteRide = async (origin, destination, category = DEFAULT_CATEGORY, tip = 0) =>
+  quoteFor(origin, destination, category, tip);
+
+export const requestRide = async (origin, destination, options = {}) => {
+  const { auth } = requireFirebase();
+  const user = auth.currentUser;
+  if (!user) throw new Error('Debes iniciar sesión');
+
+  const category = options.category ?? DEFAULT_CATEGORY;
+  const tip = Math.round(Number(options.tip) || 0);
+  const quote = quoteFor(origin, destination, category, tip);
+
+  const trip = {
+    passengerId: user.uid,
+    passengerName: user.displayName || 'Pasajero',
+    driverId: null,
+    driverName: null,
+    participants: [user.uid],
+    origin: toPoint(origin),
+    destination: toPoint(destination),
+    distanceKm: quote.distanceKm,
+    durationMin: quote.durationMin,
+    category,
+    fare: quote.fare,
+    commission: quote.commission,
+    tip,
+    driverEarnings: quote.driverEarnings,
+    commissionRate: quote.commissionRate,
+    currency: quote.currency,
+    paymentMethod: options.paymentMethod ?? PAYMENT_METHOD.CASH,
+    paymentStatus: PAYMENT_STATUS.PENDING,
+    paymentId: null,
+    status: RIDE_STATUS.REQUESTED,
+    rating: null,
+    createdAt: serverTimestamp(),
+    acceptedAt: null,
+    completedAt: null,
+  };
+
+  const ref = await addDoc(collection(db, TRIPS), trip);
+  return { ride: { id: ref.id, ...trip, createdAt: new Date().toISOString() } };
+};
+
+// Tiempo real: cualquier cambio del viaje activo llega por onSnapshot.
+export const subscribeCurrentRide = (userId, onChange, onError) => {
+  const q = query(collection(db, TRIPS), where('participants', 'array-contains', userId));
+
+  return onSnapshot(
+    q,
+    (snapshot) => {
+      const active = snapshot.docs
+        .map(toRide)
+        .filter((trip) => ACTIVE_STATUSES.includes(trip.status));
+      onChange(active[0] ?? null);
+    },
+    (error) => onError?.(error.message)
+  );
+};
+
+export const subscribeAvailableRides = (onChange, onError) => {
+  const q = query(collection(db, TRIPS), where('status', '==', RIDE_STATUS.REQUESTED), limit(20));
+
+  return onSnapshot(
+    q,
+    (snapshot) => onChange(snapshot.docs.map(toRide)),
+    (error) => onError?.(error.message)
+  );
+};
+
+export const subscribeDriverHistory = (driverId, onChange, onError) => {
+  const q = query(collection(db, TRIPS), where('driverId', '==', driverId));
+
+  return onSnapshot(
+    q,
+    (snapshot) => onChange(snapshot.docs.map(toRide)),
+    (error) => onError?.(error.message)
+  );
+};
+
+export const acceptRide = async (rideId) => {
+  const { auth, db } = requireFirebase();
+  const user = auth.currentUser;
+  if (!user) throw new Error('Debes iniciar sesión');
+
+  const ref = doc(db, TRIPS, rideId);
+  await runTransaction(db, async (transaction) => {
+    const snapshot = await transaction.get(ref);
+    if (!snapshot.exists()) throw new Error('Ese viaje ya no existe');
+
+    const trip = snapshot.data();
+    if (trip.status !== RIDE_STATUS.REQUESTED) throw new Error('Ese viaje ya fue tomado');
+
+    transaction.update(ref, {
+      driverId: user.uid,
+      driverName: user.displayName || 'Conductor',
+      participants: [trip.passengerId, user.uid],
+      status: RIDE_STATUS.ACCEPTED,
+      acceptedAt: serverTimestamp(),
+    });
+  });
+
+  return { id: rideId };
+};
+
+const driverTransition = async (rideId, fromStatuses, toStatus, extra = {}) => {
+  const { auth, db } = requireFirebase();
+  const user = auth.currentUser;
+  if (!user) throw new Error('Debes iniciar sesión');
+
+  const ref = doc(db, TRIPS, rideId);
+  await runTransaction(db, async (transaction) => {
+    const snapshot = await transaction.get(ref);
+    if (!snapshot.exists()) throw new Error('Ese viaje ya no existe');
+
+    const trip = snapshot.data();
+    if (trip.driverId !== user.uid) throw new Error('Este viaje no es tuyo');
+    if (!fromStatuses.includes(trip.status)) throw new Error('Estado inválido para esta acción');
+
+    transaction.update(ref, { status: toStatus, ...extra(trip) });
+  });
+
+  return { id: rideId };
+};
+
+export const markDriverArriving = (rideId) =>
+  driverTransition(rideId, [RIDE_STATUS.ACCEPTED], RIDE_STATUS.DRIVER_ARRIVING, () => ({}));
+
+export const startRide = (rideId) =>
+  driverTransition(
+    rideId,
+    [RIDE_STATUS.ACCEPTED, RIDE_STATUS.DRIVER_ARRIVING],
+    RIDE_STATUS.IN_PROGRESS,
+    () => ({ startedAt: serverTimestamp() })
+  );
+
+// Al finalizar se recalcula la tarifa con la misma función pura y se congela
+// el commissionRate que tenía el viaje al crearse.
+export const completeRide = (rideId) =>
+  driverTransition(rideId, [RIDE_STATUS.IN_PROGRESS], RIDE_STATUS.COMPLETED, (trip) => {
+    const { fare } = calculateFare({
+      distanceKm: trip.distanceKm,
+      durationMin: trip.durationMin,
+      category: trip.category,
+      tip: trip.tip,
+    });
+    const commissionRate = trip.commissionRate ?? PRICING.COMMISSION_RATE;
+    const commission = Math.round(fare * commissionRate);
+    const driverEarnings = fare - commission + Math.round(trip.tip ?? 0);
+
+    return { fare, commission, driverEarnings, commissionRate, completedAt: serverTimestamp() };
+  });
+
+// Efectivo: el conductor confirma que recibió el dinero.
+export const markCashPaid = (rideId) =>
+  driverTransition(rideId, [RIDE_STATUS.COMPLETED], RIDE_STATUS.PAID, () => ({
+    paymentStatus: PAYMENT_STATUS.CASH,
+    paidAt: serverTimestamp(),
+  }));
+
+export const cancelRide = async (rideId) => {
+  const { auth, db } = requireFirebase();
+  const user = auth.currentUser;
+  if (!user) throw new Error('Debes iniciar sesión');
+
+  const ref = doc(db, TRIPS, rideId);
+  await runTransaction(db, async (transaction) => {
+    const snapshot = await transaction.get(ref);
+    if (!snapshot.exists()) throw new Error('Ese viaje ya no existe');
+
+    const trip = snapshot.data();
+    const isOwner = trip.passengerId === user.uid || trip.driverId === user.uid;
+    if (!isOwner) throw new Error('Este viaje no es tuyo');
+
+    const cancellable = [
+      RIDE_STATUS.REQUESTED,
+      RIDE_STATUS.ACCEPTED,
+      RIDE_STATUS.DRIVER_ARRIVING,
+    ];
+    if (!cancellable.includes(trip.status)) throw new Error('Ya no se puede cancelar');
+
+    transaction.update(ref, {
+      status: RIDE_STATUS.CANCELLED,
+      cancelledBy: user.uid,
+      cancelledAt: serverTimestamp(),
+    });
+  });
+
+  return { id: rideId };
+};

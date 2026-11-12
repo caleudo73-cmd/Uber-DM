@@ -1,15 +1,21 @@
-import * as SecureStore from 'expo-secure-store';
-import { STORAGE_KEYS } from '../config/constants';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export const saveTokens = async ({ accessToken, refreshToken }) => {
-  await SecureStore.setItemAsync(STORAGE_KEYS.ACCESS_TOKEN, accessToken);
-  await SecureStore.setItemAsync(STORAGE_KEYS.REFRESH_TOKEN, refreshToken);
+// AsyncStorage solo para preferencias (idioma, último estado de disponibilidad).
+// Nunca se guardan tokens, números de cuenta ni datos de tarjetas.
+
+export const getPreference = (key) => AsyncStorage.getItem(key);
+
+export const setPreference = (key, value) => AsyncStorage.setItem(key, String(value));
+
+export const removePreference = (key) => AsyncStorage.removeItem(key);
+
+export const getJSON = async (key, fallback = null) => {
+  try {
+    const raw = await getPreference(key);
+    return raw ? JSON.parse(raw) : fallback;
+  } catch {
+    return fallback;
+  }
 };
 
-export const getAccessToken = () => SecureStore.getItemAsync(STORAGE_KEYS.ACCESS_TOKEN);
-export const getRefreshToken = () => SecureStore.getItemAsync(STORAGE_KEYS.REFRESH_TOKEN);
-
-export const clearTokens = async () => {
-  await SecureStore.deleteItemAsync(STORAGE_KEYS.ACCESS_TOKEN);
-  await SecureStore.deleteItemAsync(STORAGE_KEYS.REFRESH_TOKEN);
-};
+export const setJSON = (key, value) => setPreference(key, JSON.stringify(value));
