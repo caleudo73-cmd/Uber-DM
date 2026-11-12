@@ -83,7 +83,7 @@ Reglas:
   `mobile/src/components/PhotoPicker.js`, `mobile/src/components/Input.js`,
   `mobile/src/screens/RegisterScreen.js`, `mobile/src/screens/DriverHomeScreen.js`,
   `mobile/src/services/authService.js`, `firebase/firestore.rules`,
-  `mobile/scripts/validators.test.mjs` — commit: PENDIENTE.
+  `mobile/scripts/validators.test.mjs` — commit: `60b83fb`.
 - **Verificación:** `cd mobile && npm test` → 8/8 pruebas de tarifas y 12/12 de validaciones.
   Bundle de Android sin errores (1067 módulos). Prueba real contra Firestore con las reglas
   desplegadas: perfil de conductor creado, foto de 200 KB aceptada, foto de 450 KB
