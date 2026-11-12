@@ -148,7 +148,7 @@ Reglas:
   `mobile/src/screens/HistoryScreen.js`, `mobile/src/screens/RideDetailScreen.js`,
   `mobile/src/components/ChipRow.js`, `mobile/src/utils/format.js`,
   `mobile/src/services/rideService.js`, `mobile/src/navigation/AppNavigator.js`,
-  `mobile/src/screens/ProfileScreen.js`, `mobile/scripts/earnings.test.mjs` — commit: PENDIENTE.
+  `mobile/src/screens/ProfileScreen.js`, `mobile/scripts/earnings.test.mjs` — commit: `2c39ec7`.
 - **Verificación:** `cd mobile && npm test` → 8/8 tarifas, 12/12 validaciones, 6/6 cuenta
   regresiva y 9/9 ganancias/historial. Bundle de Android sin errores (1078 módulos).
 - **Aprendizaje:** (completar) Qué entendí de separar los cálculos puros de las pantallas y
