@@ -48,7 +48,7 @@ Reglas:
   `mobile/src/utils/geo.js`, `mobile/src/services/firebase.js`,
   `mobile/src/services/authService.js`, `mobile/src/services/rideService.js`,
   `mobile/src/services/placesService.js`, `mobile/src/context/AuthContext.js`,
-  `firebase/` — commit: `7f81450`.
+  `firebase/` — commit: `cfa4feb`.
 - **Verificación:** `cd mobile && npm run test:pricing` → 8/8 pruebas correctas, incluido
   el ejemplo de 8,5 km / 22 min (Económico 19.200 / XL 26.900). Bundle de Expo generado
   sin errores.
