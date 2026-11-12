@@ -1,36 +1,36 @@
 import { Pressable, StyleSheet, Text } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import theme from '../config/theme';
+import useAuth from '../hooks/useAuth';
 
-const { colors, spacing, radius, fontWeight } = theme;
+const { colors, spacing, fontSize, fontWeight } = theme;
 
-export default function TopBar({ onLogout }) {
+// Círculo con la inicial del usuario, abre el perfil.
+export default function TopBar({ onProfile }) {
   const insets = useSafeAreaInsets();
+  const { user } = useAuth();
 
   return (
-    <Pressable onPress={onLogout} style={[styles.pill, { top: insets.top + spacing.sm }]}>
-      <Ionicons name="log-out-outline" size={20} color={colors.textPrimary} />
-      <Text style={styles.text}>Salir</Text>
+    <Pressable onPress={onProfile} style={[styles.avatar, { top: insets.top + spacing.sm }]}>
+      <Text style={styles.initial}>{user?.name?.[0]?.toUpperCase() ?? '?'}</Text>
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  pill: {
+  avatar: {
     position: 'absolute',
     left: spacing.md,
-    flexDirection: 'row',
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: colors.primary,
     alignItems: 'center',
-    gap: spacing.xs,
-    backgroundColor: colors.background,
-    borderRadius: radius.pill,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
+    justifyContent: 'center',
     shadowColor: colors.shadow,
     shadowOpacity: 0.2,
     shadowRadius: 6,
     elevation: 6,
   },
-  text: { color: colors.textPrimary, fontWeight: fontWeight.medium },
-}); 
+  initial: { color: colors.primaryText, fontSize: fontSize.lg, fontWeight: fontWeight.bold },
+});

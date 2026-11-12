@@ -21,6 +21,9 @@ const colors = {
   mapDestination: '#E11900',
 
   overlay: 'rgba(0,0,0,0.4)',
+  shadow: '#000000',
+  star: '#FFB800',
+  starEmpty: '#D0D0D0',
 };
 
 export default colors;

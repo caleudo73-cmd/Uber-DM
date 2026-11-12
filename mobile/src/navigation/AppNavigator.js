@@ -7,6 +7,7 @@ import useAuth from '../hooks/useAuth';
 import DriverHomeScreen from '../screens/DriverHomeScreen';
 import LoginScreen from '../screens/LoginScreen';
 import PassengerHomeScreen from '../screens/PassengerHomeScreen';
+import ProfileScreen from '../screens/ProfileScreen';
 import RegisterScreen from '../screens/RegisterScreen';
 
 const Stack = createNativeStackNavigator();
@@ -33,6 +34,18 @@ export default function AppNavigator() {
         )}
         {user?.role === ROLES.PASSENGER && <Stack.Screen name="PassengerHome" component={PassengerHomeScreen} />}
         {user?.role === ROLES.DRIVER && <Stack.Screen name="DriverHome" component={DriverHomeScreen} />}
+        {user && (
+          <Stack.Screen
+            name="Profile"
+            component={ProfileScreen}
+            options={{
+              headerShown: true,
+              title: 'Mi perfil',
+              headerTintColor: theme.colors.textPrimary,
+              headerStyle: { backgroundColor: theme.colors.background },
+            }}
+          />
+        )}
       </Stack.Navigator>
     </NavigationContainer>
   );

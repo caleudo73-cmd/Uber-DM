@@ -29,3 +29,5 @@ export const DEFAULT_REGION = {
   latitudeDelta: 0.03,
   longitudeDelta: 0.03,
 };
+
+export const ROLE_LABEL = { passenger: 'Pasajero', driver: 'Conductor' };

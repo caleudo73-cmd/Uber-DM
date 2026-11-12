@@ -6,7 +6,7 @@ import Button from '../components/Button';
 import ErrorText from '../components/ErrorText';
 import RideMap from '../components/RideMap';
 import RideSummary from '../components/RideSummary';
-import useAuth from '../hooks/useAuth';
+import TopBar from '../components/TopBar';
 import useDriverRides from '../hooks/useDriverRides';
 
 const { colors, spacing, radius, fontSize, fontWeight } = theme;
@@ -52,8 +52,7 @@ function AvailableRides({ rides, driver }) {
   );
 }
 
-export default function DriverHomeScreen() {
-  const { signOut } = useAuth();
+export default function DriverHomeScreen({ navigation }) {
   const driver = useDriverRides();
   const { currentRide, available } = driver;
 
@@ -64,9 +63,7 @@ export default function DriverHomeScreen() {
         destination={currentRide?.destination}
       />
 
-      <View style={styles.logout}>
-        <Button title="Salir" variant="ghost" onPress={signOut} />
-      </View>
+    <TopBar onProfile={() => navigation.navigate('Profile')} />
 
       <View style={styles.bottom}>
         <BottomSheet>
