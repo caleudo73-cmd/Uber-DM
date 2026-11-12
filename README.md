@@ -2,7 +2,9 @@
 
 Aplicación móvil multiplataforma (React Native + Expo) inspirada en Uber. El repositorio
 incluye la app del pasajero y la base de la app del conductor, con backend en Firebase
-(Authentication + Firestore en tiempo real) y Cloud Functions para los pagos.
+(Authentication + Firestore en tiempo real). El pago con tarjeta funciona en **modo prueba
+simulado dentro de la app**; las Cloud Functions de Mercado Pago quedan como camino opcional
+para cuando se active el plan Blaze.
 
 ## Estructura
 
@@ -88,10 +90,27 @@ El conductor demo queda **Aprobado**. Los conductores que se registran desde la 
 en estado **Pendiente**; para aprobarlos cambia `approvalStatus` a `approved` en la consola
 de Firestore (colección `users`).
 
-## 4. Cloud Functions y pagos (Mercado Pago)
+## 4. Pagos
 
-Los pagos con tarjeta usan **Checkout Pro** y requieren el plan **Blaze**. La guía paso a
-paso (credenciales, webhook, pruebas) está en [docs/PAYMENTS.md](docs/PAYMENTS.md).
+### Modo prueba (activo, sin costo)
+
+El pago con tarjeta está **simulado dentro de la app** y no requiere Blaze, Cloud Functions
+ni una cuenta de pasarela. Al finalizar el viaje, el pasajero abre un checkout de prueba con
+una tarjeta ficticia (`4242 4242 4242 4242`) y elige el resultado:
+
+- **Aprobar**: el viaje pasa a `paid` con `paymentStatus: approved`.
+- **Rechazar**: el viaje sigue `completed` con `paymentStatus: rejected` y se puede reintentar.
+
+La app escribe esos campos solo para viajes con `paymentMethod: mercadopago_test`; las
+reglas de Firestore lo limitan y siguen bloqueando el pago real desde el cliente. El detalle
+está en [docs/PAYMENTS.md](docs/PAYMENTS.md).
+
+### Mercado Pago real (opcional, requiere Blaze)
+
+El camino con **Checkout Pro** ya está implementado en `firebase/functions` y se activa
+cuando quieras cobrar de verdad. Requiere el plan **Blaze** y credenciales de prueba de
+Mercado Pago. La guía paso a paso (credenciales, webhook, pruebas) está en
+[docs/PAYMENTS.md](docs/PAYMENTS.md).
 
 ```bash
 cd firebase/functions
@@ -154,11 +173,11 @@ npm run test:pricing
   tecnomecánica. Las fotos se comprimen y se guardan en `users/{uid}/documents`.
 - El conductor queda en estado **Pendiente** hasta que un administrador cambie
   `approvalStatus` a `approved` en Firestore.
-- El pasajero busca un destino, ve la estimación, elige **Efectivo** o **Mercado Pago** y
+- El pasajero busca un destino, ve la estimación, elige **Efectivo** o **Tarjeta (prueba)** y
   solicita el viaje.
 - El conductor ve las solicitudes en tiempo real (`onSnapshot`), acepta, marca
   *Voy en camino*, *Pasajero a bordo* y finaliza. Con efectivo confirma el cobro; con
-  tarjeta espera a que el webhook confirme el pago.
+  tarjeta espera a que el pasajero complete el checkout de prueba.
 - **Disponible / No disponible**: el conductor activa el interruptor y la app empieza a
   seguir su ubicación (`expo-location`) y a escuchar solicitudes; el estado se guarda en
   `users/{uid}.isAvailable`.
@@ -168,9 +187,9 @@ npm run test:pricing
   **nombre, marca/línea, color, tipo de vehículo y placa**.
 - Estados del viaje: `requested → accepted → driver_arriving → in_progress →
   completed → paid` (o `cancelled`).
-- **Pago con tarjeta**: al finalizar, el pasajero toca *Pagar con Mercado Pago*, se abre el
-  checkout en el navegador y el viaje pasa a `paid` cuando el webhook aprueba el pago. El
-  conductor ve *Esperando el pago…* mientras tanto.
+- **Pago con tarjeta (prueba)**: al finalizar, el pasajero toca *Pagar con tarjeta (prueba)*,
+  se abre un checkout simulado y el viaje pasa a `paid` al aprobar. El conductor ve
+  *Esperando el pago de prueba del pasajero…* mientras tanto. No se cobra dinero real.
 - Perfil con estadísticas calculadas sobre los viajes.
 - **Ganancias** (conductor): totales de Hoy / Semana / Mes con ganancia neta, tarifas
   cobradas, comisión de la plataforma y propinas. Se calcula en el teléfono a partir de los

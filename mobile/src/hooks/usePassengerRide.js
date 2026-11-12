@@ -13,6 +13,7 @@ export default function usePassengerRide() {
   const [quote, setQuote] = useState(null);
   const [category, setCategory] = useState(DEFAULT_CATEGORY);
   const [paymentMethod, setPaymentMethod] = useState(PAYMENT_METHOD.CASH);
+  const [paymentOpen, setPaymentOpen] = useState(false);
   const [subscriptionError, setSubscriptionError] = useState(null);
 
   // Suscripción en tiempo real al viaje activo (se cancela al desmontar).
@@ -21,10 +22,15 @@ export default function usePassengerRide() {
     return rideService.subscribeCurrentRide(user.id, setRide, setSubscriptionError);
   }, [user?.id]);
 
+  // Si el viaje desaparece (pagado o cancelado), el checkout de prueba se cierra.
+  useEffect(() => {
+    if (!ride) setPaymentOpen(false);
+  }, [ride]);
+
   const quoting = useAsyncAction(rideService.quoteRide);
   const requesting = useAsyncAction(rideService.requestRide);
   const cancelling = useAsyncAction(rideService.cancelRide);
-  const paying = useAsyncAction(paymentService.payTrip);
+  const paying = useAsyncAction(paymentService.payWithTestCard);
 
   const selectDestination = useCallback(
     async (origin, place, nextCategory = category) => {
@@ -55,12 +61,20 @@ export default function usePassengerRide() {
     await cancelling.run(ride.id);
   }, [cancelling.run, ride]);
 
-  // Abre el checkout de Mercado Pago. El viaje pasa a "paid" cuando el webhook
-  // confirma el pago; la suscripción en tiempo real actualiza la pantalla.
-  const pay = useCallback(async () => {
-    if (!ride) return;
-    await paying.run(ride.id);
-  }, [paying.run, ride]);
+  // Abre el checkout de prueba (pago simulado dentro de la app).
+  const openPayment = useCallback(() => setPaymentOpen(true), []);
+  const closePayment = useCallback(() => setPaymentOpen(false), []);
+
+  // Simula el resultado elegido. Al aprobar, el viaje pasa a "paid" y la
+  // suscripción en tiempo real actualiza la pantalla.
+  const pay = useCallback(
+    async (outcome) => {
+      if (!ride) return;
+      const result = await paying.run(ride.id, outcome);
+      if (result) setPaymentOpen(false);
+    },
+    [paying.run, ride]
+  );
 
   return {
     ride,
@@ -73,6 +87,9 @@ export default function usePassengerRide() {
     clearDestination,
     request,
     cancel,
+    paymentOpen,
+    openPayment,
+    closePayment,
     pay,
     loading: requesting.loading || cancelling.loading,
     paying: paying.loading,

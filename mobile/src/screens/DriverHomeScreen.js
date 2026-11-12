@@ -56,7 +56,10 @@ function PendingApproval({ user, onSignOut }) {
 }
 
 function CurrentRidePanel({ ride, driver }) {
-  const isCard = ride.paymentMethod === PAYMENT_METHOD.MERCADO_PAGO;
+  const isCard = [PAYMENT_METHOD.MERCADO_PAGO, PAYMENT_METHOD.MERCADO_PAGO_TEST].includes(
+    ride.paymentMethod
+  );
+  const isTest = ride.paymentMethod === PAYMENT_METHOD.MERCADO_PAGO_TEST;
 
   const showActions = {
     [RIDE_STATUS.ACCEPTED]: (
@@ -106,7 +109,7 @@ function CurrentRidePanel({ ride, driver }) {
       </Text>
       <Text style={styles.meta}>
         Pago: {PAYMENT_METHOD_LABEL[ride.paymentMethod] ?? ride.paymentMethod}
-        {isCard ? ' · se confirma solo al aprobarse' : ''}
+        {isCard ? (isTest ? ' · lo confirma el pasajero' : ' · se confirma solo al aprobarse') : ''}
       </Text>
       <RideSummary
         distanceKm={ride.distanceKm}
@@ -118,7 +121,11 @@ function CurrentRidePanel({ ride, driver }) {
       {ride.status === RIDE_STATUS.COMPLETED && isCard ? (
         <View style={styles.waiting}>
           <ActivityIndicator color={colors.primary} />
-          <Text style={styles.meta}>Esperando el pago del pasajero con Mercado Pago…</Text>
+          <Text style={styles.meta}>
+            {isTest
+              ? 'Esperando el pago de prueba del pasajero…'
+              : 'Esperando el pago del pasajero con Mercado Pago…'}
+          </Text>
         </View>
       ) : null}
 

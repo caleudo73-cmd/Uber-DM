@@ -53,12 +53,28 @@ service cloud.firestore {
           request.resource.data.paymentMethod == resource.data.paymentMethod
           || resource.data.status == 'requested'
         )
-        // Los campos de pago con tarjeta solo los escribe el webhook (Admin SDK).
-        // En efectivo el conductor sí confirma el cobro desde la app.
+        // Los campos de pago con tarjeta real solo los escribe el webhook (Admin
+        // SDK). En efectivo el conductor confirma el cobro desde la app y en el
+        // modo de prueba el pasajero simula el resultado: aprobado -> paid, o
+        // rechazado sin cambiar el estado del viaje.
         && (
           !request.resource.data.diff(resource.data).affectedKeys()
             .hasAny(['paymentStatus', 'paymentId', 'paymentAmount', 'paidAt', 'paymentPreferenceId'])
           || resource.data.paymentMethod == 'cash'
+          || (
+            resource.data.paymentMethod == 'mercadopago_test'
+            && resource.data.passengerId == request.auth.uid
+            && (
+              (
+                request.resource.data.paymentStatus == 'approved'
+                && request.resource.data.status == 'paid'
+              )
+              || (
+                request.resource.data.paymentStatus == 'rejected'
+                && request.resource.data.status == 'completed'
+              )
+            )
+          )
         );
 
       allow delete: if false;

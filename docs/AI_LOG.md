@@ -187,3 +187,36 @@ Reglas:
   activar el plan Blaze.
 - **Aprendizaje:** (completar) Qué entendí de no confiar en el monto que envía la app y qué
   haría distinto.
+
+---
+
+### Entrada #6 - Fecha: 2026-11-11 - Integrante: (completar) - Herramienta: Asistente de código (Big Pickle / OpenCode)
+
+- **Objetivo:** Cerrar el ciclo `completed → paid` sin activar el plan Blaze ni contratar una
+  pasarela, para que la app se pueda demostrar completa.
+- **Prompt:** «no pagare cual es la otra opcion?» (no se activará Blaze).
+- **Resumen de la respuesta:** Se implementó la opción B: un checkout de prueba simulado
+  dentro de la app. Al finalizar el viaje, el pasajero ve una tarjeta ficticia
+  (`4242 4242 4242 4242`) y elige **Aprobar pago de prueba** o **Simular rechazo**. Aprobar
+  marca el viaje como `paid` con `paymentStatus: approved`, `paymentAmount` (tarifa +
+  propina) y `paymentId: test_<id>`; rechazar deja el viaje en `completed` para reintentar.
+  El viaje usa el método `mercadopago_test`, así que las reglas de Firestore solo permiten
+  al pasajero dueño escribir los campos de pago en esos dos resultados. El camino real de
+  Mercado Pago (Cloud Functions + webhook) queda intacto y documentado como opcional.
+- **Qué se usó / modificó / descartó:** Se reutilizó `buildTestPaymentUpdate` como función
+  pura para que las pruebas y las reglas validen exactamente los mismos campos. Se descartó
+  pedir datos de tarjeta reales (el checkout es una simulación y debe verse como tal). Se
+  descartó activar Blaze y desplegar las Functions: el usuario no quiere poner tarjeta. Se
+  mantuvo `expo-web-browser` y `startMercadoPagoCheckout` para el día en que se active el
+  pago real.
+- **Archivos y commit:** `mobile/src/config/constants.js`, `mobile/src/utils/payments.js`,
+  `mobile/src/services/paymentService.js`, `mobile/src/hooks/usePassengerRide.js`,
+  `mobile/src/components/TestPaymentModal.js` (nuevo),
+  `mobile/src/components/ActiveRidePanel.js`, `mobile/src/screens/PassengerHomeScreen.js`,
+  `mobile/src/screens/DriverHomeScreen.js`, `mobile/scripts/payments.test.mjs`,
+  `firebase/firestore.rules`, `docs/PAYMENTS.md`, `README.md` — commit: PENDIENTE.
+- **Verificación:** `cd mobile && npm test` → 8/8 tarifas, 12/12 validaciones, 6/6 cuenta
+  regresiva, 9/9 ganancias/historial y 11/11 pagos (46 en total). Bundle de Android sin
+  errores (1086 módulos). Reglas de Firestore desplegadas sin necesidad de Blaze.
+- **Aprendizaje:** (completar) Qué entendí de separar el "modo prueba" del pago real y qué
+  haría distinto.

@@ -40,13 +40,17 @@ export const APPROVAL_STATUS_LABEL = {
 };
 
 export const PAYMENT_METHOD = {
+  // Pago real: lo confirma el webhook de Mercado Pago (requiere Cloud Functions).
   MERCADO_PAGO: 'mercadopago',
+  // Pago simulado dentro de la app: no hay pasarela ni cobro real.
+  MERCADO_PAGO_TEST: 'mercadopago_test',
   STRIPE: 'stripe',
   CASH: 'cash',
 };
 
 export const PAYMENT_METHOD_LABEL = {
   mercadopago: 'Mercado Pago',
+  mercadopago_test: 'Mercado Pago (prueba)',
   stripe: 'Stripe',
   cash: 'Efectivo',
 };

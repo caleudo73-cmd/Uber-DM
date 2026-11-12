@@ -8,6 +8,7 @@ import DestinationModal from '../components/DestinationModal';
 import ErrorText from '../components/ErrorText';
 import IdlePanel from '../components/IdlePanel';
 import RideMap from '../components/RideMap';
+import TestPaymentModal from '../components/TestPaymentModal';
 import TopBar from '../components/TopBar';
 import useLocation from '../hooks/useLocation';
 import usePassengerRide from '../hooks/usePassengerRide';
@@ -44,7 +45,7 @@ export default function PassengerHomeScreen({ navigation }) {
               loading={rideState.loading}
               paying={rideState.paying}
               onCancel={rideState.cancel}
-              onPay={rideState.pay}
+              onPay={rideState.openPayment}
             />
           )}
 
@@ -77,6 +78,15 @@ export default function PassengerHomeScreen({ navigation }) {
         suggestions={suggestions}
         onClose={() => setSearchOpen(false)}
         onSelect={chooseDestination}
+      />
+
+      <TestPaymentModal
+        visible={rideState.paymentOpen && !!ride}
+        ride={ride}
+        loading={rideState.paying}
+        onApprove={rideState.pay}
+        onReject={rideState.pay}
+        onClose={rideState.closePayment}
       />
     </View>
   );

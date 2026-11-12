@@ -2,12 +2,13 @@ import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import theme from '../config/theme';
 import {
   PAYMENT_METHOD_LABEL,
+  PAYMENT_STATUS,
   PAYMENT_STATUS_LABEL,
   RIDE_STATUS,
   RIDE_STATUS_LABEL,
 } from '../config/constants';
 import { CATEGORY_LABEL } from '../config/pricing';
-import { canPayWithCard, isCardPayment } from '../utils/payments';
+import { canPayWithCard, isCardPayment, isTestPayment } from '../utils/payments';
 import Button from './Button';
 import RideSummary from './RideSummary';
 
@@ -66,19 +67,27 @@ export default function ActiveRidePanel({ ride, canCancel, loading, paying, onCa
           {canPayWithCard(ride) ? (
             <>
               <Button
-                title="Pagar con Mercado Pago"
+                title={isTestPayment(ride) ? 'Pagar con tarjeta (prueba)' : 'Pagar con Mercado Pago'}
                 variant="accent"
                 onPress={onPay}
                 loading={paying}
               />
               <Text style={styles.hint}>
-                Se abrirá Mercado Pago en el navegador. El viaje se marca como pagado
-                automáticamente cuando se aprueba.
+                {isTestPayment(ride)
+                  ? 'Se abre un checkout simulado. No se cobra dinero real.'
+                  : 'Se abrirá Mercado Pago en el navegador. El viaje se marca como pagado cuando se aprueba.'}
               </Text>
             </>
           ) : isCardPayment(ride) ? (
-            <Text style={[styles.hint, styles.approved]}>
-              Pago {PAYMENT_STATUS_LABEL[ride.paymentStatus] ?? 'pendiente'}
+            <Text
+              style={[
+                styles.hint,
+                ride.paymentStatus === PAYMENT_STATUS.REJECTED ? styles.rejected : styles.approved,
+              ]}
+            >
+              {ride.paymentStatus === PAYMENT_STATUS.REJECTED
+                ? 'Pago rechazado. Puedes intentar de nuevo.'
+                : `Pago ${PAYMENT_STATUS_LABEL[ride.paymentStatus] ?? 'pendiente'}`}
             </Text>
           ) : (
             <Text style={styles.hint}>Paga en efectivo al conductor.</Text>
@@ -125,4 +134,5 @@ const styles = StyleSheet.create({
   payment: { gap: spacing.xs, marginBottom: spacing.sm },
   hint: { color: colors.textSecondary, fontSize: fontSize.sm, lineHeight: 18 },
   approved: { color: colors.success, fontWeight: fontWeight.medium },
+  rejected: { color: colors.danger, fontWeight: fontWeight.medium },
 });
