@@ -90,3 +90,7 @@ Reglas:
   rechazada, cambio de rol bloqueado y lectura de la foto correcta; el usuario de prueba se
   eliminó al final.
 - **Aprendizaje:** (completar) Qué entendí del registro por pasos y qué haría distinto.
+
+> Ajuste posterior (commit `62be170`): se agregó `subscribeToProfile` para escuchar
+> `users/{uid}` con `onSnapshot` y que la aprobación del administrador se refleje en la app
+> sin cerrar sesión.
