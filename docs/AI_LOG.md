@@ -220,3 +220,42 @@ Reglas:
   errores (1086 módulos). Reglas de Firestore desplegadas sin necesidad de Blaze.
 - **Aprendizaje:** (completar) Qué entendí de separar el "modo prueba" del pago real y qué
   haría distinto.
+
+---
+
+### Entrada #7 - Fecha: 2026-11-11 - Integrante: (completar) - Herramienta: Asistente de código (Big Pickle / OpenCode)
+
+- **Objetivo:** Implementar la calificación del pasajero al conductor (1 a 5 estrellas) y
+  mostrar el promedio en el perfil del conductor.
+- **Prompt:** «sigue con la calificacion».
+- **Resumen de la respuesta:** Se agregó `utils/ratings.js` con las reglas puras
+  (`canRateRide`, `canShowRating`, `isValidRating`, etiquetas por puntaje). El servicio
+  `rateRide` valida dentro de una transacción que quien califica sea el pasajero, que el
+  viaje esté `completed`/`paid` y que no tenga calificación previa. Al aprobar el pago de
+  prueba se abre el modal **Califica tu viaje** con estrellas interactivas; también se puede
+  calificar después desde **Historial → Detalle del viaje**. El promedio del perfil ahora
+  cuenta solo los viajes donde el usuario fue `driverId`. Se corrigió además un bug: el viaje
+  `completed` desaparecía de la pantalla principal porque la suscripción solo miraba los
+  estados activos, así que ni el pago ni la calificación llegaban a mostrarse.
+- **Qué se usó / modificó / descartó:** Se usó la colección `trips.rating` (ya prevista en el
+  modelo de datos) en lugar de una subcolección de reseñas, para no duplicar la fuente de
+  verdad. Se descartó que el conductor califique al pasajero en esta entrega (la
+  especificación pide la calificación del pasajero al conductor) y se descartó guardar el
+  promedio en el perfil: se calcula en el teléfono a partir de los viajes, igual que las
+  ganancias. La suscripción de viaje actual ahora incluye `completed` y ordena por
+  `createdAt` descendente para mostrar el más reciente.
+- **Archivos y commit:** `mobile/src/utils/ratings.js` (nuevo),
+  `mobile/src/components/RatingInput.js` (nuevo),
+  `mobile/src/components/RatingModal.js` (nuevo),
+  `mobile/src/services/rideService.js`, `mobile/src/services/userService.js`,
+  `mobile/src/hooks/usePassengerRide.js`, `mobile/src/screens/PassengerHomeScreen.js`,
+  `mobile/src/screens/RideDetailScreen.js`, `mobile/src/config/constants.js`,
+  `mobile/scripts/ratings.test.mjs` (nuevo), `firebase/firestore.rules`, `README.md` —
+  commit: `8438a44`.
+- **Verificación:** `cd mobile && npm test` → 8/8 tarifas, 12/12 validaciones, 6/6 cuenta
+  regresiva, 9/9 ganancias/historial, 11/11 pagos y 6/6 calificación (52 en total). Bundle
+  de Android sin errores (1089 módulos). Reglas de Firestore desplegadas y verificadas contra
+  Firestore real 5/5: no se califica un viaje en curso, el conductor no puede calificar, se
+  rechaza un valor mayor a 5 y el pasajero sí califica un viaje terminado.
+- **Aprendizaje:** (completar) Qué entendí de validar la calificación también en las reglas
+  del servidor y qué haría distinto.
