@@ -522,7 +522,9 @@ Reglas:
   público de Google; no se llamó a la API real.
 - **Archivos y commit:** `mobile/src/services/directionsService.js`,
   `mobile/src/components/RideMap.js`, `mobile/src/screens/RideDetailScreen.js`,
-  `mobile/scripts/directions.test.mjs`, `mobile/.env.example` — commit: `689a5a9`.
+  `mobile/scripts/directions.test.mjs`, `mobile/.env.example` — commit: `689a5a9`; documentación
+  en `README.md`, `docs/ARCHITECTURE.md`, `docs/SPEC_COMPLIANCE.md`, `docs/TESTING.md`,
+  `docs/DELIVERY.md` y este archivo — commit: `319aa1b`.
 - **Verificación:** `cd mobile && npm test` → **81/81** (18 de rutas, incluidas la decodificación
   del polyline y el respaldo recto). Bundle de Android exportado sin errores (~6 MB).
 - **Aprendizaje:** (completar) Qué entendí de decodificar un formato comprimido como el polyline,
