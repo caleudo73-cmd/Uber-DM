@@ -81,6 +81,16 @@ export const isValidSoatNumber = (value) => /^[A-Za-z0-9-]{5,20}$/.test(String(v
 export const isValidTechnomechanicalNumber = (value) =>
   /^[A-Za-z0-9-]{5,20}$/.test(String(value ?? '').trim());
 
+// La revisión técnico-mecánica aplica a vehículos con 6 años o más.
+// Es una simplificación de la regla colombiana que pide la especificación.
+export const TECHNOMECHANICAL_MIN_AGE = 6;
+
+export const needsTechnomechanical = (vehicleYear, now = new Date()) => {
+  const year = Number(vehicleYear);
+  if (!Number.isInteger(year) || year < MIN_VEHICLE_YEAR) return false;
+  return year <= now.getFullYear() - TECHNOMECHANICAL_MIN_AGE;
+};
+
 // --- Fechas en formato DD/MM/AAAA ---
 
 export const formatDateInput = (value) => {

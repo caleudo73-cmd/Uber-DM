@@ -1,4 +1,4 @@
-// AI-assisted: see docs/AI_LOG.md #9
+// AI-assisted: see docs/AI_LOG.md #9, #12
 import {
   addDoc,
   collection,
@@ -19,9 +19,9 @@ import {
 } from '../config/constants';
 import { DEFAULT_CATEGORY, PRICING } from '../config/pricing';
 import { calculateFare } from '../utils/calculateFare';
-import { distanceKm, estimateDurationMin } from '../utils/geo';
 import { isValidRating } from '../utils/ratings';
 import { db, requireFirebase } from './firebase';
+import { getRouteMetrics } from './directionsService';
 
 const TRIPS = 'trips';
 
@@ -44,13 +44,15 @@ export const toRide = (snapshot) => {
   };
 };
 
-const quoteFor = (origin, destination, category, tip = 0) => {
-  const km = distanceKm(origin, destination);
-  const durationMin = estimateDurationMin(km);
-  const result = calculateFare({ distanceKm: km, durationMin, category, tip });
+// Distancia y duración vienen de Google Distance Matrix cuando hay llave; si no,
+// se usa la estimación local. La tarifa siempre se calcula con calculateFare.
+const quoteFor = async (origin, destination, category, tip = 0) => {
+  const { distanceKm, durationMin, source } = await getRouteMetrics(origin, destination);
+  const result = calculateFare({ distanceKm, durationMin, category, tip });
   return {
-    distanceKm: +km.toFixed(2),
+    distanceKm,
     durationMin,
+    routeSource: source,
     category,
     currency: PRICING.CURRENCY,
     tip: Math.round(Number(tip) || 0),
@@ -69,7 +71,7 @@ export const requestRide = async (origin, destination, options = {}) => {
 
   const category = options.category ?? DEFAULT_CATEGORY;
   const tip = Math.round(Number(options.tip) || 0);
-  const quote = quoteFor(origin, destination, category, tip);
+  const quote = await quoteFor(origin, destination, category, tip);
 
   const trip = {
     passengerId: user.uid,
@@ -82,6 +84,7 @@ export const requestRide = async (origin, destination, options = {}) => {
     destination: toPoint(destination),
     distanceKm: quote.distanceKm,
     durationMin: quote.durationMin,
+    routeSource: quote.routeSource,
     category,
     fare: quote.fare,
     commission: quote.commission,

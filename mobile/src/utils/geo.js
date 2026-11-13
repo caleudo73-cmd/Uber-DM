@@ -12,6 +12,6 @@ export const distanceKm = (a, b) => {
   return 2 * EARTH_RADIUS_KM * Math.asin(Math.sqrt(h));
 };
 
-// Estimación temporal mientras no se conecta Google Distance Matrix.
-// Se reemplaza por la duración real cuando se agregue la API key.
+// Estimación de respaldo cuando no hay llave de Google Distance Matrix o la
+// API no responde (ver services/directionsService.js).
 export const estimateDurationMin = (km) => Math.max(1, Math.ceil(km * 2.5) + 2);

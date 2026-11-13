@@ -21,6 +21,7 @@ import {
   isValidTechnomechanicalNumber,
   isValidVehicleYear,
   isValidVehicleText,
+  needsTechnomechanical,
   normalizePlate,
   parseDateInput,
   toISODate,
@@ -131,6 +132,14 @@ test('Marca y modelo máximo 30 caracteres', () => {
   assert.equal(isValidVehicleText('A'.repeat(30)), true);
   assert.equal(isValidVehicleText('A'.repeat(31)), false);
   assert.equal(isValidVehicleText('   '), false);
+});
+
+test('Tecnomecánica según el año del vehículo', () => {
+  assert.equal(needsTechnomechanical('2021', now), false); // 5 años
+  assert.equal(needsTechnomechanical('2020', now), true); // 6 años
+  assert.equal(needsTechnomechanical('1999', now), true);
+  assert.equal(needsTechnomechanical('', now), false);
+  assert.equal(needsTechnomechanical('2027', now), false); // año inválido/futuro
 });
 
 test('Números de documentos', () => {

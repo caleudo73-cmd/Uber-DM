@@ -10,6 +10,10 @@ export const FIREBASE_CONFIG = {
   appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID ?? '',
 };
 
+// Opcional: habilita Google Distance Matrix para distancia y duración reales.
+// Sin esta llave la app usa la estimación local (línea recta + duración estimada).
+export const GOOGLE_MAPS_API_KEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY ?? '';
+
 export const missingFirebaseKeys = Object.entries(FIREBASE_CONFIG)
   .filter(([, value]) => !value)
   .map(([key]) => key);

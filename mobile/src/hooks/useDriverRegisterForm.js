@@ -20,6 +20,7 @@ import {
   isValidTechnomechanicalNumber,
   isValidVehicleYear,
   isValidVehicleText,
+  needsTechnomechanical,
   normalizePlate,
   onlyDigits,
   toISODate,
@@ -168,6 +169,10 @@ export default function useDriverRegisterForm() {
     setErrors((current) => {
       // Al cambiar de categoría, la capacidad se vuelve a validar.
       const keys = name === 'vehicleCategory' ? [name, 'vehicleCapacity'] : [name];
+      // Si cambia el año, la tecnomecánica puede dejar de aplicar.
+      if (name === 'vehicleYear') {
+        keys.push('technomechanicalNumber', 'technomechanicalExpiresAt', 'photo_technomechanical');
+      }
       if (!keys.some((key) => current[key])) return current;
       const next = { ...current };
       keys.forEach((key) => delete next[key]);
@@ -200,8 +205,14 @@ export default function useDriverRegisterForm() {
   const validateStep = useCallback(
     (index, currentValues = values, currentPhotos = photos) => {
       const key = DRIVER_STEPS[index].key;
-      const found = validateFields(STEP_FIELDS[key], currentValues);
+      // La tecnomecánica solo se exige si el vehículo tiene 6 años o más.
+      const skipTechnomechanical = !needsTechnomechanical(currentValues.vehicleYear);
+      const fields = STEP_FIELDS[key].filter(
+        (field) => !(skipTechnomechanical && field.startsWith('technomechanical'))
+      );
+      const found = validateFields(fields, currentValues);
       for (const photo of STEP_PHOTOS[key] ?? []) {
+        if (skipTechnomechanical && photo.key === 'technomechanical') continue;
         if (!currentPhotos[photo.key]?.base64) {
           found[`photo_${photo.key}`] = photo.message;
         }
@@ -277,19 +288,23 @@ export default function useDriverRegisterForm() {
           number: values.soatNumber.trim(),
           expiresAt: toISODate(values.soatExpiresAt),
         },
-        technomechanical: {
-          number: values.technomechanicalNumber.trim(),
-          expiresAt: toISODate(values.technomechanicalExpiresAt),
-        },
+        technomechanical: needsTechnomechanical(values.vehicleYear)
+          ? {
+              number: values.technomechanicalNumber.trim(),
+              expiresAt: toISODate(values.technomechanicalExpiresAt),
+            }
+          : null,
       },
       mercadoPagoEmail: values.mercadoPagoEmail.trim().toLowerCase(),
       acceptedTerms: values.acceptTerms,
       photos: Object.fromEntries(
         PHOTO_KEYS.map((key) => [
           key,
-          photos[key]?.base64
-            ? { base64: photos[key].base64, mimeType: photos[key].mimeType ?? 'image/jpeg' }
-            : null,
+          key === 'technomechanical' && !needsTechnomechanical(values.vehicleYear)
+            ? null
+            : photos[key]?.base64
+              ? { base64: photos[key].base64, mimeType: photos[key].mimeType ?? 'image/jpeg' }
+              : null,
         ])
       ),
     };

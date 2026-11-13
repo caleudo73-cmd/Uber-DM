@@ -19,6 +19,7 @@ import {
   isValidLicenseNumber,
   isValidSoatNumber,
   isValidTechnomechanicalNumber,
+  needsTechnomechanical,
   toISODate,
 } from '../utils/validators';
 
@@ -48,19 +49,6 @@ const DOCUMENT_FIELD = {
   },
 };
 
-const validate = (values) => {
-  const errors = {};
-  REQUIRED_DOCUMENTS.forEach((document) => {
-    const fields = DOCUMENT_FIELD[document.key];
-    if (!fields.validateNumber(values[fields.number])) errors[fields.number] = fields.numberError;
-    if (!isNotExpired(values[fields.expiry])) errors[fields.expiry] = fields.expiryError;
-  });
-  if (!isValidEmail(values.mercadoPagoEmail)) {
-    errors.mercadoPagoEmail = 'Correo de Mercado Pago inválido';
-  }
-  return errors;
-};
-
 const normalize = (name, value) =>
   name.endsWith('ExpiresAt') ? formatDateInput(value) : value;
 
@@ -69,6 +57,24 @@ const normalize = (name, value) =>
 export default function EditDocumentsScreen({ navigation }) {
   const { user } = useAuth();
   const documents = user?.documents ?? {};
+  const requiresTechnomechanical = needsTechnomechanical(user?.vehicle?.year);
+  const documentsToEdit = REQUIRED_DOCUMENTS.filter(
+    (document) => document.key !== 'technomechanical' || requiresTechnomechanical
+  );
+
+  const validate = (values) => {
+    const errors = {};
+    documentsToEdit.forEach((document) => {
+      const fields = DOCUMENT_FIELD[document.key];
+      if (!fields.validateNumber(values[fields.number])) errors[fields.number] = fields.numberError;
+      if (!isNotExpired(values[fields.expiry])) errors[fields.expiry] = fields.expiryError;
+    });
+    if (!isValidEmail(values.mercadoPagoEmail)) {
+      errors.mercadoPagoEmail = 'Correo de Mercado Pago inválido';
+    }
+    return errors;
+  };
+
   const [licensePhoto, setLicensePhoto] = useDocumentPhoto('license');
   const [soatPhoto, setSoatPhoto] = useDocumentPhoto('soat');
   const [technomechanicalPhoto, setTechnomechanicalPhoto] = useDocumentPhoto('technomechanical');
@@ -92,7 +98,7 @@ export default function EditDocumentsScreen({ navigation }) {
     validate,
     normalize,
     onSubmit: async (values) => {
-      const missing = REQUIRED_DOCUMENTS.find((document) => !photos[document.key][0]?.uri);
+      const missing = documentsToEdit.find((document) => !photos[document.key][0]?.uri);
       if (missing) throw new Error(`Sube la foto de ${missing.label.toLowerCase()}`);
 
       await userService.updateProfileFields(user.id, {
@@ -105,16 +111,18 @@ export default function EditDocumentsScreen({ navigation }) {
             number: values.soatNumber.trim(),
             expiresAt: toISODate(values.soatExpiresAt),
           },
-          technomechanical: {
-            number: values.technomechanicalNumber.trim(),
-            expiresAt: toISODate(values.technomechanicalExpiresAt),
-          },
+          technomechanical: requiresTechnomechanical
+            ? {
+                number: values.technomechanicalNumber.trim(),
+                expiresAt: toISODate(values.technomechanicalExpiresAt),
+              }
+            : null,
         },
         mercadoPagoEmail: values.mercadoPagoEmail.trim().toLowerCase(),
       });
 
       await Promise.all(
-        REQUIRED_DOCUMENTS.map((document) => {
+        documentsToEdit.map((document) => {
           const [photo] = photos[document.key];
           return photo?.base64
             ? userService.saveDocumentPhoto(user.id, document.key, photo)
@@ -128,7 +136,7 @@ export default function EditDocumentsScreen({ navigation }) {
   return (
     <ScreenContainer>
       <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-        {REQUIRED_DOCUMENTS.map((document) => {
+        {documentsToEdit.map((document) => {
           const fields = DOCUMENT_FIELD[document.key];
           const [photo, setPhoto] = photos[document.key];
           return (
@@ -160,6 +168,12 @@ export default function EditDocumentsScreen({ navigation }) {
             </View>
           );
         })}
+
+        {!requiresTechnomechanical ? (
+          <Text style={styles.note}>
+            Tu vehículo tiene menos de 6 años: la revisión técnico-mecánica no aplica.
+          </Text>
+        ) : null}
 
         <Input
           label="Correo de Mercado Pago"
@@ -209,5 +223,6 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   savedText: { color: colors.success, fontWeight: fontWeight.medium, fontSize: fontSize.sm },
+  note: { color: colors.textSecondary, fontSize: fontSize.sm, lineHeight: 20, marginBottom: spacing.md },
   gap: { height: spacing.sm },
 });

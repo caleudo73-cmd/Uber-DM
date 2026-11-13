@@ -18,6 +18,7 @@ import ErrorText from './ErrorText';
 import Input from './Input';
 import PhotoPicker from './PhotoPicker';
 import TabBar from './TabBar';
+import { needsTechnomechanical } from '../utils/validators';
 
 const { colors, spacing, radius, fontSize, fontWeight } = theme;
 
@@ -225,10 +226,12 @@ function VehicleStep({ form }) {
 
 function DocumentsStep({ form }) {
   const { values, errors, setField, photos, setPhoto } = form;
+  const requiresTechnomechanical = needsTechnomechanical(values.vehicleYear);
 
   return (
     <>
       {REQUIRED_DOCUMENTS.map((document) => {
+        if (document.key === 'technomechanical' && !requiresTechnomechanical) return null;
         const fields = DOCUMENT_FIELD[document.key];
         return (
           <View key={document.key} style={styles.document}>
@@ -259,6 +262,12 @@ function DocumentsStep({ form }) {
           </View>
         );
       })}
+
+      {!requiresTechnomechanical ? (
+        <Text style={styles.note}>
+          Tu vehículo tiene menos de 6 años: la revisión técnico-mecánica no aplica.
+        </Text>
+      ) : null}
 
       <Input
         label="Correo de Mercado Pago"
