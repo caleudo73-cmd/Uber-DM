@@ -298,3 +298,48 @@ Reglas:
   y los documentos temporales de la prueba se eliminaron.
 - **Aprendizaje:** (completar) Qué entendí de validar los campos nuevos tanto en el formulario
   como en las reglas, y qué haría distinto.
+
+---
+
+### Entrada #9 - Fecha: 2026-11-12 - Integrante: (completar) - Herramienta: Asistente de código (Big Pickle / OpenCode)
+
+- **Objetivo:** Cerrar los huecos rápidos del flujo de viaje: rechazar solicitudes sin
+  cancelarlas, mostrar duración y método de pago en la tarjeta de solicitud, promedio por
+  viaje y saldo del conductor en ganancias, filtros de fecha y método de pago en el historial,
+  y mapa con la ruta en el detalle del viaje.
+- **Prompt:** «Huecos rápidos de viaje» (opción elegida tras completar el registro).
+- **Resumen de la respuesta:** El botón **Rechazar** agrega el UID del conductor a
+  `trips.rejectedBy`; el viaje sigue en `requested` para los demás y la suscripción filtra los
+  que ese conductor ya rechazó. La tarjeta de solicitud muestra la **duración estimada** y el
+  **método de pago**. En Ganancias se agregó el **promedio neto por viaje** y una tarjeta de
+  **saldo con la plataforma** (ganancias con tarjeta menos comisión de viajes en efectivo,
+  que puede ser negativa). El historial ahora filtra por **Hoy / Semana / Mes / rango de
+  fechas** (`DD/MM/AAAA`, inclusivo) y por **método de pago**, además de estado y rol. El
+  detalle del viaje muestra un mapa con la ruta aproximada en línea recta entre origen y
+  destino.
+- **Qué se usó / modificó / descartó:** Se reutilizaron `ChipRow`, `Input` y las funciones
+  puras de `utils/earnings.js` y `utils/history.js`. Los filtros y totales se calculan en el
+  teléfono; no se agregaron índices ni campos nuevos en Firestore, salvo `rejectedBy`. Se
+  descartó cancelar el viaje al rechazarlo (afectaría al pasajero y a otros conductores) y se
+  descartó integrar Google Directions/Distance Matrix por ahora: la ruta es una `Polyline`
+  recta y queda como mejora futura. Las reglas ahora congelan los datos del recorrido y de la
+  cotización (origen, destino, distancia, duración, categoría, propina, moneda y
+  `commissionRate`) y solo permiten recalcular la tarifa al pasar de `in_progress` a
+  `completed`, para que el conductor no pueda alterar el precio después de aceptar.
+- **Archivos y commit:** `mobile/src/services/rideService.js`,
+  `mobile/src/hooks/useDriverRides.js`, `mobile/src/components/RideRequestCard.js`,
+  `mobile/src/components/RideMap.js`, `mobile/src/screens/DriverHomeScreen.js`,
+  `mobile/src/screens/EarningsScreen.js`, `mobile/src/screens/HistoryScreen.js`,
+  `mobile/src/screens/RideDetailScreen.js`, `mobile/src/utils/earnings.js`,
+  `mobile/src/utils/history.js`, `mobile/scripts/earnings.test.mjs`,
+  `firebase/firestore.rules`, `README.md` — commit: `b1b2cfc`.
+- **Verificación:** `cd mobile && npm test` → 8/8 tarifas, 14/14 validaciones, 6/6 cuenta
+  regresiva, 16/16 ganancias/historial, 11/11 pagos y 6/6 calificación (61 en total). Bundle
+  de Android exportado sin errores. Reglas desplegadas y verificadas contra Firestore real
+  7/7: el pasajero crea la solicitud, dos conductores rechazan sin borrarse entre sí, no se
+  rechaza un viaje ya aceptado, el conductor no puede cambiar la tarifa ni cancelar el viaje.
+  El viaje y las tres cuentas temporales de la prueba se eliminaron.
+- **Aprendizaje:** (completar) Qué entendí de separar el rechazo (ocultar para un conductor)
+  de la cancelación (afectar a todos), de calcular el saldo como deuda, y de congelar la
+  cotización en las reglas para que el precio no se pueda manipular.
+
