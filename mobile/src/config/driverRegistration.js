@@ -1,6 +1,7 @@
 // Definición de los tres pasos del registro de conductor y de los documentos
 // obligatorios. La lógica de validación vive en src/utils/validators.js.
 
+// AI-assisted: see docs/AI_LOG.md #8
 import { CATEGORIES, CATEGORY_LABEL } from './pricing';
 
 export const DRIVER_STEPS = [
@@ -17,6 +18,18 @@ export const DOCUMENT_TYPES = [
 export const VEHICLE_CATEGORIES = [CATEGORIES.ECONOMY, CATEGORIES.XL, CATEGORIES.PREMIUM].map(
   (value) => ({ value, label: CATEGORY_LABEL[value] })
 );
+
+export const GENDER_OPTIONS = [
+  { value: 'female', label: 'Femenino' },
+  { value: 'male', label: 'Masculino' },
+  { value: 'other', label: 'Otro' },
+  { value: 'undisclosed', label: 'Prefiero no decir' },
+];
+
+export const LANGUAGE_OPTIONS = [
+  { value: 'es', label: 'Español' },
+  { value: 'en', label: 'English' },
+];
 
 export const REQUIRED_DOCUMENTS = [
   {

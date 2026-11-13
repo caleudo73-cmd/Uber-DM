@@ -1,11 +1,16 @@
 // Validaciones puras del registro de conductor.
 // Sin dependencias de React ni de Firebase: se pueden probar con Node
 // (mobile/scripts/validators.test.mjs).
+// AI-assisted: see docs/AI_LOG.md #2, #8
+
+import { CATEGORIES } from '../config/pricing.js';
 
 export const MIN_PASSWORD_LENGTH = 6;
 export const MIN_AGE = 18;
 export const MAX_AGE = 80;
 export const MIN_VEHICLE_YEAR = 1990;
+export const MAX_NAME_LENGTH = 50;
+export const MIN_XL_CAPACITY = 6;
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[A-Za-z]{2,}$/;
 const NAME_RE = /^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ' .-]+$/;
@@ -22,7 +27,7 @@ export const isValidPassword = (value) =>
 // Nombre completo: al menos nombre y apellido, solo letras y separadores.
 export const isValidFullName = (value) => {
   const text = String(value ?? '').trim().replace(/\s+/g, ' ');
-  if (text.length < 5 || text.length > 80) return false;
+  if (text.length < 5 || text.length > MAX_NAME_LENGTH) return false;
   if (!NAME_RE.test(text)) return false;
   return text.split(' ').filter(Boolean).length >= 2;
 };
@@ -47,8 +52,19 @@ export const isValidPlate = (value) => {
 export const isValidVehicleYear = (value, now = new Date()) => {
   const year = Number(value);
   if (!Number.isInteger(year)) return false;
-  return year >= MIN_VEHICLE_YEAR && year <= now.getFullYear() + 1;
+  return year >= MIN_VEHICLE_YEAR && year <= now.getFullYear();
 };
+
+// Capacidad de pasajeros: entero positivo. La categoría XL exige mínimo 6.
+export const isValidPassengerCapacity = (value, category = CATEGORIES.ECONOMY) => {
+  const capacity = Number(value);
+  if (!Number.isInteger(capacity) || capacity < 1) return false;
+  if (category === CATEGORIES.XL) return capacity >= MIN_XL_CAPACITY;
+  return true;
+};
+
+// La aceptación de términos es un checkbox: solo vale true.
+export const hasAcceptedTerms = (value) => value === true;
 
 export const isValidLicenseNumber = (value) => /^[A-Za-z0-9]{5,15}$/.test(String(value ?? '').trim());
 

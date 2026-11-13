@@ -1,15 +1,18 @@
+// AI-assisted: see docs/AI_LOG.md #8
 import { useCallback, useMemo, useState } from 'react';
 import { DRIVER_STEPS } from '../config/driverRegistration';
 import { ROLES } from '../config/constants';
 import { CATEGORIES } from '../config/pricing';
 import {
   formatDateInput,
+  hasAcceptedTerms,
   isNotExpired,
   isValidBirthDate,
   isValidDocumentNumber,
   isValidEmail,
   isValidFullName,
   isValidLicenseNumber,
+  isValidPassengerCapacity,
   isValidPassword,
   isValidPhone,
   isValidPlate,
@@ -33,6 +36,8 @@ const initialValues = {
   documentNumber: '',
   birthDate: '',
   phone: '',
+  gender: '',
+  language: 'es',
   city: 'Medellín',
   address: '',
   // Paso 2: vehículo
@@ -42,6 +47,7 @@ const initialValues = {
   vehiclePlate: '',
   vehicleColor: '',
   vehicleCategory: CATEGORIES.ECONOMY,
+  vehicleCapacity: '',
   // Paso 3: documentos
   licenseNumber: '',
   licenseExpiresAt: '',
@@ -49,11 +55,25 @@ const initialValues = {
   soatExpiresAt: '',
   technomechanicalNumber: '',
   technomechanicalExpiresAt: '',
+  mercadoPagoEmail: '',
+  acceptTerms: false,
 };
 
 const STEP_FIELDS = {
-  personal: ['name', 'email', 'password', 'confirmPassword', 'documentNumber', 'birthDate', 'phone', 'city', 'address'],
-  vehicle: ['vehicleBrand', 'vehicleLine', 'vehicleYear', 'vehiclePlate', 'vehicleColor'],
+  personal: [
+    'name',
+    'email',
+    'password',
+    'confirmPassword',
+    'documentNumber',
+    'birthDate',
+    'phone',
+    'gender',
+    'language',
+    'city',
+    'address',
+  ],
+  vehicle: ['vehicleBrand', 'vehicleLine', 'vehicleYear', 'vehiclePlate', 'vehicleColor', 'vehicleCapacity'],
   documents: [
     'licenseNumber',
     'licenseExpiresAt',
@@ -61,6 +81,19 @@ const STEP_FIELDS = {
     'soatExpiresAt',
     'technomechanicalNumber',
     'technomechanicalExpiresAt',
+    'mercadoPagoEmail',
+    'acceptTerms',
+  ],
+};
+
+// Cada paso valida sus propias fotos obligatorias.
+const STEP_PHOTOS = {
+  personal: [{ key: 'profile', message: 'Adjunta tu foto de perfil' }],
+  vehicle: [{ key: 'vehicle', message: 'Adjunta una foto donde se vea la placa' }],
+  documents: [
+    { key: 'license', message: 'Adjunta una foto de la licencia' },
+    { key: 'soat', message: 'Adjunta una foto del SOAT' },
+    { key: 'technomechanical', message: 'Adjunta una foto de la tecnomecánica' },
   ],
 };
 
@@ -76,30 +109,43 @@ const fieldValidators = {
   documentNumber: (value) => (isValidDocumentNumber(value) ? null : 'Entre 6 y 10 dígitos'),
   birthDate: (value) => (isValidBirthDate(value) ? null : 'Debes tener entre 18 y 80 años'),
   phone: (value) => (isValidPhone(value) ? null : 'Celular de 10 dígitos que empiece por 3'),
+  gender: (value) => (required(value) ? null : 'Selecciona tu género'),
+  language: (value) => (required(value) ? null : 'Selecciona el idioma'),
   city: (value) => (required(value) ? null : 'Escribe tu ciudad'),
   address: (value) =>
     String(value).trim().length >= 5 ? null : 'Escribe tu dirección (mínimo 5 caracteres)',
   vehicleBrand: (value) => (required(value) ? null : 'Escribe la marca'),
   vehicleLine: (value) => (required(value) ? null : 'Escribe la línea o modelo'),
-  vehicleYear: (value) => (isValidVehicleYear(value) ? null : 'Año entre 1990 y el próximo año'),
+  vehicleYear: (value) => (isValidVehicleYear(value) ? null : 'Año entre 1990 y el año actual'),
   vehiclePlate: (value) => (isValidPlate(value) ? null : 'Placa inválida (ej. ABC123)'),
   vehicleColor: (value) => (required(value) ? null : 'Escribe el color'),
+  vehicleCapacity: (value, values) => {
+    if (isValidPassengerCapacity(value, values.vehicleCategory)) return null;
+    return values.vehicleCategory === CATEGORIES.XL
+      ? 'XL exige mínimo 6 pasajeros'
+      : 'Capacidad inválida (mínimo 1)';
+  },
   licenseNumber: (value) => (isValidLicenseNumber(value) ? null : 'Número de licencia inválido'),
   licenseExpiresAt: (value) => (isNotExpired(value) ? null : 'La licencia debe estar vigente'),
   soatNumber: (value) => (isValidSoatNumber(value) ? null : 'Número de SOAT inválido'),
   soatExpiresAt: (value) => (isNotExpired(value) ? null : 'El SOAT debe estar vigente'),
+  mercadoPagoEmail: (value) =>
+    isValidEmail(value) ? null : 'Correo de Mercado Pago inválido',
+  acceptTerms: (value) =>
+    hasAcceptedTerms(value) ? null : 'Debes aceptar los términos y la comisión',
   technomechanicalNumber: (value) =>
     isValidTechnomechanicalNumber(value) ? null : 'Número de certificado inválido',
   technomechanicalExpiresAt: (value) =>
     isNotExpired(value) ? null : 'La tecnomecánica debe estar vigente',
 };
 
-const PHOTO_KEYS = ['license', 'soat', 'technomechanical'];
+const PHOTO_KEYS = Object.values(STEP_PHOTOS).flat().map((photo) => photo.key);
+const initialPhotos = Object.fromEntries(PHOTO_KEYS.map((key) => [key, null]));
 
 export default function useDriverRegisterForm() {
   const { signUp } = useAuth();
   const [values, setValues] = useState(initialValues);
-  const [photos, setPhotos] = useState({ license: null, soat: null, technomechanical: null });
+  const [photos, setPhotos] = useState(initialPhotos);
   const [errors, setErrors] = useState({});
   const [step, setStep] = useState(0);
   const { run, loading, error } = useAsyncAction(signUp);
@@ -110,14 +156,17 @@ export default function useDriverRegisterForm() {
     let value = rawValue;
     if (['documentNumber', 'phone'].includes(name)) value = onlyDigits(rawValue);
     if (name === 'vehicleYear') value = onlyDigits(rawValue).slice(0, 4);
+    if (name === 'vehicleCapacity') value = onlyDigits(rawValue).slice(0, 2);
     if (name === 'vehiclePlate') value = normalizePlate(rawValue).slice(0, 6);
     if (name.endsWith('ExpiresAt') || name === 'birthDate') value = formatDateInput(rawValue);
 
     setValues((current) => ({ ...current, [name]: value }));
     setErrors((current) => {
-      if (!current[name]) return current;
+      // Al cambiar de categoría, la capacidad se vuelve a validar.
+      const keys = name === 'vehicleCategory' ? [name, 'vehicleCapacity'] : [name];
+      if (!keys.some((key) => current[key])) return current;
       const next = { ...current };
-      delete next[name];
+      keys.forEach((key) => delete next[key]);
       return next;
     });
   }, []);
@@ -148,11 +197,9 @@ export default function useDriverRegisterForm() {
     (index, currentValues = values, currentPhotos = photos) => {
       const key = DRIVER_STEPS[index].key;
       const found = validateFields(STEP_FIELDS[key], currentValues);
-      if (key === 'documents') {
-        for (const photoKey of PHOTO_KEYS) {
-          if (!currentPhotos[photoKey]?.base64) {
-            found[`photo_${photoKey}`] = 'Adjunta una foto del documento';
-          }
+      for (const photo of STEP_PHOTOS[key] ?? []) {
+        if (!currentPhotos[photo.key]?.base64) {
+          found[`photo_${photo.key}`] = photo.message;
         }
       }
       return found;
@@ -186,11 +233,12 @@ export default function useDriverRegisterForm() {
 
     if (Object.keys(allErrors).length > 0) {
       setErrors(allErrors);
-      const firstInvalid = DRIVER_STEPS.findIndex((item) =>
-        STEP_FIELDS[item.key].some((key) => allErrors[key])
-      );
-      const documentsInvalid = PHOTO_KEYS.some((key) => allErrors[`photo_${key}`]);
-      setStep(firstInvalid >= 0 ? firstInvalid : documentsInvalid ? 2 : 0);
+      const firstInvalid = DRIVER_STEPS.findIndex((item) => {
+        const keys = STEP_FIELDS[item.key] ?? [];
+        const photoKeys = (STEP_PHOTOS[item.key] ?? []).map((photo) => `photo_${photo.key}`);
+        return [...keys, ...photoKeys].some((key) => allErrors[key]);
+      });
+      setStep(firstInvalid >= 0 ? firstInvalid : 0);
       return null;
     }
 
@@ -203,6 +251,8 @@ export default function useDriverRegisterForm() {
       documentType: values.documentType,
       documentNumber: onlyDigits(values.documentNumber),
       birthDate: toISODate(values.birthDate),
+      gender: values.gender,
+      language: values.language,
       city: values.city.trim(),
       address: values.address.trim(),
       vehicle: {
@@ -212,6 +262,7 @@ export default function useDriverRegisterForm() {
         plate: normalizePlate(values.vehiclePlate),
         color: values.vehicleColor.trim(),
         category: values.vehicleCategory,
+        capacity: Number(values.vehicleCapacity),
       },
       documents: {
         license: {
@@ -227,6 +278,8 @@ export default function useDriverRegisterForm() {
           expiresAt: toISODate(values.technomechanicalExpiresAt),
         },
       },
+      mercadoPagoEmail: values.mercadoPagoEmail.trim().toLowerCase(),
+      acceptedTerms: values.acceptTerms,
       photos: Object.fromEntries(
         PHOTO_KEYS.map((key) => [
           key,

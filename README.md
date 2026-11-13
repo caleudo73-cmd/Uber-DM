@@ -168,9 +168,12 @@ npm run test:pricing
 
 - Registro e inicio de sesión con Firebase Auth.
 - **Registro de conductor en tres pestañas** (Datos personales, Vehículo, Documentos) con
-  validaciones por campo: nombre y apellido, correo, contraseña, documento, edad entre 18 y
-  80 años, celular, dirección, placa, año del vehículo y vigencia de licencia, SOAT y
-  tecnomecánica. Las fotos se comprimen y se guardan en `users/{uid}/documents`.
+  validaciones por campo: nombre y apellido (máximo 50 caracteres), correo, contraseña,
+  documento, edad entre 18 y 80 años, celular, género, idioma, dirección, placa, año del
+  vehículo (entre 1990 y el año actual), capacidad de pasajeros (XL exige mínimo 6),
+  correo de Mercado Pago, aceptación de términos con el 20 % de comisión y vigencia de
+  licencia, SOAT y tecnomecánica. Las fotos de perfil, vehículo y documentos se comprimen
+  y se guardan en `users/{uid}/documents`; la foto de perfil se muestra en el perfil.
 - El conductor queda en estado **Pendiente** hasta que un administrador cambie
   `approvalStatus` a `approved` en Firestore.
 - El pasajero busca un destino, ve la estimación, elige **Efectivo** o **Tarjeta (prueba)** y
@@ -206,7 +209,8 @@ npm run test:pricing
 
 Pendiente de la especificación completa: notificaciones push.
 
-Pruebas (tarifas, validaciones, cuenta regresiva, ganancias, historial, pagos y calificación):
+Pruebas (tarifas, validaciones, cuenta regresiva, ganancias, historial, pagos y calificación;
+54 en total):
 
 ```bash
 cd mobile

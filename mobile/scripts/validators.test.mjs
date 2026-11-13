@@ -4,6 +4,7 @@
 import assert from 'node:assert/strict';
 import {
   formatDateInput,
+  hasAcceptedTerms,
   isNotExpired,
   isRequired,
   isValidBirthDate,
@@ -11,6 +12,7 @@ import {
   isValidEmail,
   isValidFullName,
   isValidLicenseNumber,
+  isValidPassengerCapacity,
   isValidPassword,
   isValidPhone,
   isValidPlate,
@@ -33,6 +35,8 @@ test('Nombre completo exige nombre y apellido', () => {
   assert.equal(isValidFullName('Ana'), false);
   assert.equal(isValidFullName('Ana123'), false);
   assert.equal(isValidFullName(''), false);
+  assert.equal(isValidFullName(`Ana ${'P'.repeat(46)}`), true); // 50 caracteres
+  assert.equal(isValidFullName(`Ana ${'P'.repeat(47)}`), false); // 51 caracteres
 });
 
 test('Correo electrónico', () => {
@@ -70,10 +74,27 @@ test('Placas de carro y moto', () => {
 
 test('Año del vehículo', () => {
   assert.equal(isValidVehicleYear('2019', now), true);
-  assert.equal(isValidVehicleYear('2027', now), true);
-  assert.equal(isValidVehicleYear('2028', now), false);
+  assert.equal(isValidVehicleYear('2026', now), true);
+  assert.equal(isValidVehicleYear('2027', now), false);
   assert.equal(isValidVehicleYear('1989', now), false);
   assert.equal(isValidVehicleYear('', now), false);
+});
+
+test('Capacidad de pasajeros', () => {
+  assert.equal(isValidPassengerCapacity('4', 'economy'), true);
+  assert.equal(isValidPassengerCapacity('1', 'premium'), true);
+  assert.equal(isValidPassengerCapacity('6', 'xl'), true);
+  assert.equal(isValidPassengerCapacity('5', 'xl'), false);
+  assert.equal(isValidPassengerCapacity('0', 'economy'), false);
+  assert.equal(isValidPassengerCapacity('4.5', 'economy'), false);
+  assert.equal(isValidPassengerCapacity('', 'economy'), false);
+});
+
+test('Aceptación de términos', () => {
+  assert.equal(hasAcceptedTerms(true), true);
+  assert.equal(hasAcceptedTerms(false), false);
+  assert.equal(hasAcceptedTerms('true'), false);
+  assert.equal(hasAcceptedTerms(undefined), false);
 });
 
 test('Fechas DD/MM/AAAA', () => {

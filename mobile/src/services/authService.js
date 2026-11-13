@@ -1,3 +1,4 @@
+// AI-assisted: see docs/AI_LOG.md #8
 import {
   createUserWithEmailAndPassword,
   onAuthStateChanged,
@@ -43,10 +44,13 @@ const toProfile = (firebaseUser, data = {}) => ({
   approvalStatus: data.approvalStatus ?? APPROVAL_STATUS.APPROVED,
   photoURL: data.photoURL ?? firebaseUser.photoURL ?? null,
   phone: data.phone ?? null,
+  gender: data.gender ?? null,
+  language: data.language ?? null,
   city: data.city ?? null,
   documentNumber: data.documentNumber ?? null,
   vehicle: data.vehicle ?? null,
   documents: data.documents ?? null,
+  mercadoPagoEmail: data.mercadoPagoEmail ?? null,
 });
 
 const readProfile = async (firebaseUser) => {
@@ -74,10 +78,15 @@ const driverProfile = (payload) => ({
   documentType: payload.documentType ?? 'CC',
   documentNumber: payload.documentNumber ?? null,
   birthDate: payload.birthDate ?? null,
+  gender: payload.gender ?? null,
+  language: payload.language ?? 'es',
   city: payload.city ?? null,
   address: payload.address ?? null,
   vehicle: payload.vehicle ?? null,
   documents: payload.documents ?? null,
+  mercadoPagoEmail: payload.mercadoPagoEmail ?? null,
+  acceptedTerms: payload.acceptedTerms === true,
+  termsAcceptedAt: payload.acceptedTerms ? serverTimestamp() : null,
   driverRegisteredAt: serverTimestamp(),
 });
 
@@ -168,6 +177,17 @@ export const subscribeToProfile = (uid, onChange) => {
     },
     (error) => console.warn('No se pudo escuchar el perfil:', error.message)
   );
+};
+
+// La foto de perfil se guarda en la subcolección de documentos (base64) para
+// no cargar el documento del perfil en cada lectura.
+export const getProfilePhoto = async (uid) => {
+  if (firebaseConfigError) return null;
+  const { db } = requireFirebase();
+  const snapshot = await getDoc(doc(db, 'users', uid, 'documents', 'profile'));
+  if (!snapshot.exists()) return null;
+  const { base64, mimeType } = snapshot.data();
+  return base64 ? `data:${mimeType ?? 'image/jpeg'};base64,${base64}` : null;
 };
 
 // Mantiene la sesión sincronizada con Firebase Auth.

@@ -1,4 +1,5 @@
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+// AI-assisted: see docs/AI_LOG.md #8
+import { ActivityIndicator, Image, StyleSheet, Text, View } from 'react-native';
 import theme from '../config/theme';
 import { ROLE_LABEL, ROLES } from '../config/constants';
 import Button from '../components/Button';
@@ -8,12 +9,14 @@ import StarRating from '../components/StarRating';
 import StatCard from '../components/StatCard';
 import useAuth from '../hooks/useAuth';
 import useProfile from '../hooks/useProfile';
+import useProfilePhoto from '../hooks/useProfilePhoto';
 
 const { colors, spacing, radius, fontSize, fontWeight } = theme;
 
 export default function ProfileScreen({ navigation }) {
   const { signOut } = useAuth();
   const { profile, loading, error } = useProfile();
+  const photo = useProfilePhoto();
 
   if (!profile) {
     return (
@@ -29,7 +32,11 @@ export default function ProfileScreen({ navigation }) {
     <ScreenContainer>
       <View style={styles.header}>
         <View style={styles.avatar}>
-          <Text style={styles.initial}>{user.name[0].toUpperCase()}</Text>
+          {photo ? (
+            <Image source={{ uri: photo }} style={styles.avatarImage} />
+          ) : (
+            <Text style={styles.initial}>{user.name[0].toUpperCase()}</Text>
+          )}
         </View>
         <Text style={styles.name}>{user.name}</Text>
         <Text style={styles.email}>{user.email}</Text>
@@ -72,7 +79,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.md,
+    overflow: 'hidden',
   },
+  avatarImage: { width: '100%', height: '100%' },
   initial: { color: colors.primaryText, fontSize: fontSize.xl, fontWeight: fontWeight.bold },
   name: { fontSize: fontSize.lg, fontWeight: fontWeight.bold, color: colors.textPrimary },
   email: { color: colors.textSecondary, marginBottom: spacing.sm },

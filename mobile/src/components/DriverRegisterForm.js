@@ -1,8 +1,13 @@
+// AI-assisted: see docs/AI_LOG.md #8
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import theme from '../config/theme';
+import { PRICING } from '../config/pricing';
 import {
   DOCUMENT_TYPES,
   DRIVER_STEPS,
+  GENDER_OPTIONS,
+  LANGUAGE_OPTIONS,
   REQUIRED_DOCUMENTS,
   VEHICLE_CATEGORIES,
 } from '../config/driverRegistration';
@@ -51,10 +56,18 @@ function LabeledChoice({ label, children }) {
 }
 
 function PersonalStep({ form }) {
-  const { values, errors, setField } = form;
+  const { values, errors, setField, photos, setPhoto } = form;
 
   return (
     <>
+      <PhotoPicker
+        label="Foto de perfil"
+        hint="De frente y con buena luz"
+        value={photos.profile}
+        onChange={(photo) => setPhoto('profile', photo)}
+        error={errors.photo_profile}
+      />
+
       <Input
         label="Nombre completo"
         value={values.name}
@@ -123,6 +136,16 @@ function PersonalStep({ form }) {
         placeholder="3001234567"
         error={errors.phone}
       />
+
+      <LabeledChoice label="Género">
+        <Choice
+          options={GENDER_OPTIONS}
+          value={values.gender}
+          onChange={(value) => setField('gender', value)}
+        />
+        {errors.gender ? <Text style={styles.fieldError}>{errors.gender}</Text> : null}
+      </LabeledChoice>
+
       <Input
         label="Ciudad"
         value={values.city}
@@ -138,12 +161,21 @@ function PersonalStep({ form }) {
         placeholder="Calle 10 # 20-30"
         error={errors.address}
       />
+
+      <LabeledChoice label="Idioma">
+        <Choice
+          options={LANGUAGE_OPTIONS}
+          value={values.language}
+          onChange={(value) => setField('language', value)}
+        />
+        {errors.language ? <Text style={styles.fieldError}>{errors.language}</Text> : null}
+      </LabeledChoice>
     </>
   );
 }
 
 function VehicleStep({ form }) {
-  const { values, errors, setField } = form;
+  const { values, errors, setField, photos, setPhoto } = form;
 
   return (
     <>
@@ -190,6 +222,16 @@ function VehicleStep({ form }) {
         placeholder="Ej. Blanco"
         error={errors.vehicleColor}
       />
+      <Input
+        label="Capacidad de pasajeros"
+        value={values.vehicleCapacity}
+        onChangeText={(text) => setField('vehicleCapacity', text)}
+        keyboardType="number-pad"
+        maxLength={2}
+        placeholder="4"
+        hint="La categoría XL exige mínimo 6"
+        error={errors.vehicleCapacity}
+      />
 
       <LabeledChoice label="Categoría del servicio">
         <Choice
@@ -198,6 +240,14 @@ function VehicleStep({ form }) {
           onChange={(value) => setField('vehicleCategory', value)}
         />
       </LabeledChoice>
+
+      <PhotoPicker
+        label="Foto del vehículo"
+        hint="Donde se vea la placa"
+        value={photos.vehicle}
+        onChange={(photo) => setPhoto('vehicle', photo)}
+        error={errors.photo_vehicle}
+      />
     </>
   );
 }
@@ -238,6 +288,35 @@ function DocumentsStep({ form }) {
           </View>
         );
       })}
+
+      <Input
+        label="Correo de Mercado Pago"
+        value={values.mercadoPagoEmail}
+        onChangeText={(text) => setField('mercadoPagoEmail', text)}
+        keyboardType="email-address"
+        autoCapitalize="none"
+        placeholder="correo@ejemplo.com"
+        hint="Donde recibirías tus pagos"
+        error={errors.mercadoPagoEmail}
+      />
+
+      <Pressable
+        style={styles.terms}
+        onPress={() => setField('acceptTerms', !values.acceptTerms)}
+        accessibilityRole="checkbox"
+        accessibilityState={{ checked: values.acceptTerms }}
+      >
+        <Ionicons
+          name={values.acceptTerms ? 'checkbox' : 'square-outline'}
+          size={24}
+          color={values.acceptTerms ? colors.success : colors.textSecondary}
+        />
+        <Text style={styles.termsText}>
+          Acepto los términos y la comisión del{' '}
+          {Math.round(PRICING.COMMISSION_RATE * 100)}% sobre cada viaje.
+        </Text>
+      </Pressable>
+      {errors.acceptTerms ? <Text style={styles.fieldError}>{errors.acceptTerms}</Text> : null}
 
       <Text style={styles.note}>
         Tu cuenta quedará en estado Pendiente hasta que un administrador revise los documentos.
@@ -305,6 +384,19 @@ const styles = StyleSheet.create({
   choiceTextSelected: { color: colors.primaryText },
   labeledChoice: { marginBottom: spacing.md },
   label: { color: colors.textSecondary, fontSize: fontSize.sm, marginBottom: spacing.xs },
+  fieldError: { color: colors.danger, fontSize: fontSize.sm, marginTop: spacing.xs },
+  terms: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    padding: spacing.md,
+    borderRadius: radius.md,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    marginBottom: spacing.md,
+  },
+  termsText: { flex: 1, color: colors.textPrimary, fontSize: fontSize.sm, lineHeight: 18 },
   document: {
     backgroundColor: colors.background,
     borderWidth: 1,

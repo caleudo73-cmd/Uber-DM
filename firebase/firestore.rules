@@ -1,3 +1,4 @@
+// AI-assisted: see docs/AI_LOG.md #8
 rules_version = '2';
 
 service cloud.firestore {
@@ -10,14 +11,32 @@ service cloud.firestore {
     // desde la consola de Firebase (por eso no se permite modificarlos aquí).
     match /users/{userId} {
       allow read: if signedIn();
-      allow create: if signedIn() && request.auth.uid == userId;
+      // El conductor debe enviar el registro completo, incluida la aceptación
+      // de términos y la capacidad del vehículo (XL exige mínimo 6).
+      allow create: if signedIn()
+        && request.auth.uid == userId
+        && (
+          request.resource.data.role != 'driver'
+          || (
+            request.resource.data.acceptedTerms == true
+            && request.resource.data.language in ['es', 'en']
+            && request.resource.data.gender is string
+            && request.resource.data.mercadoPagoEmail is string
+            && request.resource.data.vehicle.capacity is int
+            && request.resource.data.vehicle.capacity >= 1
+            && (
+              request.resource.data.vehicle.category != 'xl'
+              || request.resource.data.vehicle.capacity >= 6
+            )
+          )
+        );
       allow update: if signedIn()
         && request.auth.uid == userId
         && request.resource.data.role == resource.data.role
         && request.resource.data.approvalStatus == resource.data.approvalStatus;
       allow delete: if false;
 
-      // Fotos de documentos del conductor (licencia, SOAT, tecnomecánica).
+      // Fotos del conductor: perfil, vehículo, licencia, SOAT y tecnomecánica.
       // Solo el dueño del perfil puede leerlas o reemplazarlas.
       match /documents/{documentId} {
         allow read, delete: if signedIn() && request.auth.uid == userId;
