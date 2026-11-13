@@ -21,6 +21,7 @@ uber-app/
 ├── mobile/                 App Expo (React Native)
 │   ├── src/config/         Tema, constantes, configuración de Firebase y tarifas
 │   ├── src/context/        Sesión del usuario (AuthContext)
+│   ├── src/navigation/     Stack del viaje + Drawer de perfil, historial y ajustes
 │   ├── src/services/       Acceso a Firebase Auth / Firestore / lugares / pagos
 │   ├── src/hooks/          Hooks de viaje, ubicación, ganancias, perfil y formularios
 │   ├── src/screens/        Pantallas
@@ -210,7 +211,10 @@ npm run test:pricing
   estrellas. También se puede calificar después desde **Historial → Detalle del viaje**. La
   calificación se guarda en `trips.rating`, solo la puede escribir el pasajero y una sola vez;
   el promedio aparece en el perfil del conductor.
-- Perfil con estadísticas calculadas sobre los viajes.
+- Perfil con estadísticas calculadas sobre los viajes y **menú lateral (Drawer)** con inicio,
+  perfil, historial, ganancias y configuración.
+- **Perfil editable**: datos personales, foto, vehículo, documentos, correo de Mercado Pago e
+  idioma. Los cambios se guardan en `users/{uid}` y se reflejan al instante sin cerrar sesión.
 - **Ganancias** (conductor): totales de Hoy / Semana / Mes con ganancia neta, tarifas
   cobradas, comisión de la plataforma, propinas y **promedio por viaje**. También muestra el
   **saldo con la plataforma**: suma lo ganado con pagos con tarjeta y resta la comisión de
@@ -238,10 +242,10 @@ La matriz completa está en [docs/SPEC_COMPLIANCE.md](docs/SPEC_COMPLIANCE.md). 
 
 - **Completo:** registro con validaciones, disponibilidad y GPS, solicitudes con 15 s y
   rechazo persistente, máquina de estados, tarifa/comisión/propina, pago de prueba y efectivo,
-  calificación, ganancias, historial con filtros, detalle con mapa, reglas de seguridad.
-- **Parcial:** perfil de solo lectura (sin edición), navegación sin Drawer, ruta en línea
-  recta (sin Google Directions), fotos en base64 (sin Cloudinary), tecnomecánica siempre
-  obligatoria, pago real implementado pero sin desplegar.
+  calificación, ganancias, historial con filtros, detalle con mapa, perfil editable con
+  Drawer de navegación, reglas de seguridad.
+- **Parcial:** ruta en línea recta (sin Google Directions), fotos en base64 (sin Cloudinary),
+  tecnomecánica siempre obligatoria, pago real implementado pero sin desplegar.
 - **Pendiente:** notificaciones push (FCM), bitácora en PDF, video de 5 minutos y PR/merge a
   `main`.
 

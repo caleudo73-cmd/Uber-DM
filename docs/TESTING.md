@@ -127,6 +127,14 @@ un emulador.
       “Ver más” pagina de 10 en 10; el mensaje vacío aparece cuando no hay viajes.
 - [ ] **Detalle**: mapa con ruta, distancia, duración, categoría, tarifa, comisión, propina,
       ganancia, estado del pago y calificación.
+- [ ] **Drawer**: el botón de menú abre el panel con inicio, perfil, historial, ganancias
+      (solo conductor) y configuración; el ítem activo se resalta.
+- [ ] **Perfil editable**: cambiar nombre, celular, ciudad y foto; guardar y ver el cambio
+      reflejado al volver al perfil.
+- [ ] **Vehículo y documentos**: editar marca, placa, color y vencimientos; reemplazar una
+      foto. Una fecha de vencimiento pasada debe mostrar el error debajo del campo.
+- [ ] **Idioma**: cambiar entre Español e English en *Configuración* y verificar que se
+      guarda en `users/{uid}.language` (la interfaz sigue en español).
 - [ ] **Cierre de sesión**: vuelve al login y la sesión no se restaura.
 
 ## 5. Datos de prueba

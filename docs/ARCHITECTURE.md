@@ -37,7 +37,7 @@ uber-app/
 │   ├── src/
 │   │   ├── config/            Tema, colores, constantes, tarifas, env, registro
 │   │   ├── context/           AuthContext (sesión + perfil en tiempo real)
-│   │   ├── navigation/        AppNavigator (Stack)
+│   │   ├── navigation/        AppNavigator (Stack + Drawer)
 │   │   ├── screens/           Una pantalla por flujo
 │   │   ├── components/        UI reutilizable (botones, tarjetas, mapas, modales)
 │   │   ├── hooks/             Lógica de estado y suscripciones
@@ -60,6 +60,30 @@ components  utils (puro, sin React ni Firebase)
 ```
 
 `utils/` no importa React ni Firebase: así se prueba con Node directamente.
+
+### Navegación
+
+```
+Stack (raíz)
+├── Login / Register          (sin sesión)
+└── Main → Drawer             (con sesión)
+    ├── Inicio                (DriverHome o PassengerHome según el rol)
+    ├── Mi perfil             (ProfileScreen)
+    ├── Historial             (HistoryScreen)
+    ├── Ganancias             (solo conductor)
+    └── Configuración         (SettingsScreen)
+Stack (encima del Drawer)
+├── Detalle del viaje        (RideDetailScreen)
+├── Editar datos personales  (EditProfileScreen)
+├── Editar vehículo          (EditVehicleScreen)
+└── Editar documentos        (EditDocumentsScreen)
+```
+
+El Drawer usa `@react-navigation/drawer` con un contenido propio
+(`components/AppDrawerContent.js`): datos del usuario, accesos y cierre de sesión.
+Las pantallas de edición y el detalle viven en el Stack para conservar el botón de
+regreso. `index.js` importa `react-native-gesture-handler` y `App.js` envuelve la app
+en `GestureHandlerRootView`, requisitos del Drawer y de Reanimated.
 
 ## 3. Sesión y perfil
 
@@ -196,6 +220,8 @@ comisión de viajes en efectivo. Puede ser negativo (deuda con la plataforma).
 | `useEarnings` | Totales por período y saldo con `useMemo` |
 | `useRideHistory` | Suscripción al historial del usuario |
 | `useProfile` / `useProfilePhoto` | Perfil y foto al abrir la pantalla |
+| `useProfileForm` | Estado, validación y guardado de los formularios de edición |
+| `useDocumentPhoto` | Carga la foto de un documento para reemplazarla |
 
 Suscripciones principales:
 
@@ -239,8 +265,6 @@ Resumen de `firebase/firestore.rules`:
 ## 11. Limitaciones conocidas
 
 - **Push (FCM)**: no implementado; requiere development build.
-- **Perfil editable**: hoy es solo lectura (datos, vehículo, documentos e idioma).
-- **Drawer**: no existe; la navegación secundaria es Stack desde el perfil.
 - **Google Directions / Distance Matrix**: no conectado.
 - **Cloudinary**: no conectado.
 - **Tecnomecánica**: se exige siempre, sin condición por año del vehículo.

@@ -98,6 +98,9 @@ Crea `pasajero@demo.com` y `conductor@demo.com` con clave `123456`.
    del cobro en el conductor.
 7. **Calificación** (20 s): calificar con 5 estrellas y mostrar el promedio en el perfil.
 8. **Ganancias e historial** (1 min): mostrar totales, saldo, filtros y detalle con mapa.
+9. **Perfil y Drawer** (40 s): abrir el menú lateral, entrar a *Mi perfil*, editar un dato y
+   guardar; mostrar que el cambio se refleja al instante. Mostrar también el selector de
+   idioma en *Configuración*.
 
 Consejo: dejar la app ya abierta y con sesión iniciada para no gastar tiempo en el login.
 
@@ -133,9 +136,7 @@ en los prompts de IA.
 - **No hay notificaciones push** (FCM requiere development build).
 - La **ruta es una línea recta**; no se usa Google Directions ni Distance Matrix.
 - Las **fotos van en base64** en Firestore; no se usa Cloudinary.
-- El **perfil no es editable** todavía.
 - La **tecnomecánica se exige siempre**, sin condición por año del vehículo.
-- El **Drawer** de navegación no está implementado.
 - La UI está en **español**; el idioma se guarda en el perfil pero no traduce la app.
 
 ## 8. Antes de subir el video

@@ -25,7 +25,7 @@ Leyenda:
 | 5 | Cobro con Mercado Pago / Stripe en modo prueba y efectivo | 🟡 | Efectivo ✅ y **pago de prueba simulado** ✅. Checkout Pro real está implementado en `firebase/functions` pero **no desplegado** (requiere Blaze). Stripe no está integrado. |
 | 6 | Cálculo automático de tarifa, comisión y ganancia neta | ✅ | `utils/calculateFare.js`, `config/pricing.js` |
 | 7 | Historial con filtros y resumen de ganancias día/semana/mes | ✅ | `screens/HistoryScreen.js`, `screens/EarningsScreen.js`, `utils/history.js`, `utils/earnings.js` |
-| 8 | Navegación combinada: Stack + Tabs + Drawer | 🟡 | **Stack** ✅ y **Tabs del registro** ✅. El **Drawer** no existe: perfil, historial, ganancias y configuración se abren desde el perfil o el avatar (Stack). |
+| 8 | Navegación combinada: Stack + Tabs + Drawer | ✅ | **Stack** para el flujo del viaje y las pantallas de edición, **Tabs** para el registro y **Drawer** para inicio, perfil, historial, ganancias y configuración (`navigation/AppNavigator.js`, `components/AppDrawerContent.js`). |
 
 ---
 
@@ -75,7 +75,7 @@ Leyenda:
 | **Cobro y resumen**: tarifa final, comisión, ganancia neta y estado del pago | ✅ | `ActiveRidePanel`, `RideDetailScreen`; estados Aprobado / Pendiente / Rechazado / Efectivo |
 | **Ganancias**: día, semana y mes | ✅ | `EarningsScreen` + `useEarnings` |
 | **Historial** con filtros | ✅ | `HistoryScreen` |
-| **Perfil y configuración**: datos editables, vehículo, documentos, idioma y cierre de sesión | 🟡 | El perfil muestra datos, foto, promedio, servicios y cancelados, y permite cerrar sesión. **No permite editar** datos, vehículo, documentos ni idioma. |
+| **Perfil y configuración**: datos editables, vehículo, documentos, idioma y cierre de sesión | ✅ | `ProfileScreen`, `SettingsScreen`, `EditProfileScreen`, `EditVehicleScreen` y `EditDocumentsScreen`. La foto de perfil, el vehículo y los documentos se pueden reemplazar; el idioma se guarda en el perfil. |
 
 ### Estados del viaje
 
@@ -196,6 +196,8 @@ Leyenda:
 
 ### Cerradas en esta pasada
 
+- **Perfil editable**: datos personales, vehículo, documentos, foto e idioma.
+- **Drawer** de navegación con inicio, perfil, historial, ganancias y configuración.
 - Límite de 30 caracteres en marca y modelo.
 - Color del vehículo como lista desplegable.
 - Vigencia estricta de documentos (`> hoy`).
@@ -206,11 +208,9 @@ Leyenda:
 
 ### Recomendadas para cerrar la entrega
 
-1. **Perfil editable** (datos, vehículo, documentos e idioma).
-2. **Drawer** de navegación (perfil, historial, ganancias, configuración).
-3. **PR y merge a `main`** con la bitácora incluida.
-4. **Bitácora en PDF** y **video** de 5 minutos.
-5. Completar los campos `(completar)` de `docs/AI_LOG.md`.
+1. **PR y merge a `main`** con la bitácora incluida.
+2. **Bitácora en PDF** y **video** de 5 minutos.
+3. Completar los campos `(completar)` de `docs/AI_LOG.md`.
 
 ### Opcionales / requieren servicios externos
 

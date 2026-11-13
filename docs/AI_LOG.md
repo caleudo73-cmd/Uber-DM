@@ -384,4 +384,55 @@ Reglas:
   reutilizables, de comparar el código contra la especificación sin asumir que “ya está todo”,
   y de distinguir brechas que se cierran en minutos de las que dependen de servicios externos.
 
+---
+
+### Entrada #11 - Fecha: 2026-11-12 - Integrante: (completar) - Herramienta: Asistente de código (Big Pickle / OpenCode)
+
+- **Objetivo:** Cerrar las dos brechas de pantallas de la especificación: **perfil editable**
+  (datos personales, foto, vehículo, documentos e idioma) y **Drawer** de navegación para
+  perfil, historial, ganancias y configuración.
+- **Prompt:** Tras la auditoría, el usuario eligió la opción «Perfil editable + Drawer
+  (Recomendado)» para continuar la entrega.
+- **Resumen de la respuesta:** Se agregó `@react-navigation/drawer` con
+  `react-native-gesture-handler` y `react-native-reanimated`. La raíz quedó como un Stack que
+  contiene el Drawer (`Home`, `Profile`, `History`, `Earnings`, `Settings`) y, encima, las
+  pantallas con botón de regreso (`RideDetail`, `EditProfile`, `EditVehicle`,
+  `EditDocuments`). `HomeScreen` elige la vista según el rol. El menú lateral es propio
+  (`AppDrawerContent`) y muestra datos del usuario, estado de aprobación y cierre de sesión.
+  Se crearon `EditProfileScreen`, `EditVehicleScreen`, `EditDocumentsScreen` y `SettingsScreen`,
+  con validaciones reutilizadas, `PhotoPicker` y guardado en Firestore. Se añadieron
+  `useProfileForm` (estado, validación y guardado), `useDocumentPhoto` (carga la foto existente)
+  y `updateProfileFields` / `saveDocumentPhoto` / `getDocumentPhoto` en `userService`. El
+  componente `Choice` se extrajo de `DriverRegisterForm` para reutilizarlo. `TopBar` ahora tiene
+  botón de menú y el perfil ofrece accesos directos a las pantallas de edición.
+- **Qué se usó / modificó / descartó:** Se reutilizaron `Input`, `Button`, `PhotoPicker`,
+  `ScreenContainer`, `ErrorText` y los validadores puros. Se descartó un panel lateral casero:
+  se usó el Drawer real de React Navigation. Se mantiene el guardado de fotos en base64 en
+  Firestore (sin Cloudinary) y la interfaz en español aunque el idioma se guarde en el perfil.
+  No se implementaron en esta pasada el selector nativo de fecha ni la tecnomecánica
+  condicional por año; siguen como brechas menores.
+- **Archivos y commit:** `mobile/App.js`, `mobile/index.js`, `mobile/package.json`,
+  `mobile/src/navigation/AppNavigator.js`, `mobile/src/components/AppDrawerContent.js`,
+  `mobile/src/components/Choice.js`, `mobile/src/components/TopBar.js`,
+  `mobile/src/components/DriverRegisterForm.js`, `mobile/src/screens/HomeScreen.js`,
+  `mobile/src/screens/ProfileScreen.js`, `mobile/src/screens/EditProfileScreen.js`,
+  `mobile/src/screens/EditVehicleScreen.js`, `mobile/src/screens/EditDocumentsScreen.js`,
+  `mobile/src/screens/SettingsScreen.js`, `mobile/src/screens/DriverHomeScreen.js`,
+  `mobile/src/screens/PassengerHomeScreen.js`, `mobile/src/hooks/useProfileForm.js`,
+  `mobile/src/hooks/useDocumentPhoto.js`, `mobile/src/hooks/useProfilePhoto.js`,
+  `mobile/src/services/userService.js`, `mobile/src/services/authService.js`,
+  `mobile/src/utils/validators.js`, `mobile/scripts/validators.test.mjs`, `README.md`,
+  `docs/SPEC_COMPLIANCE.md`, `docs/ARCHITECTURE.md`, `docs/TESTING.md`,
+  `docs/DELIVERY.md` — commit: `77bada2`.
+- **Verificación:** `cd mobile && npm test` → 8/8 tarifas, 15/15 validaciones, 6/6 cuenta
+  regresiva, 16/16 ganancias/historial, 11/11 pagos y 6/6 calificación (**62 en total**).
+  Bundle de Android exportado sin errores (5,9 MB). Las reglas de Firestore no cambiaron: la
+  actualización del perfil ya estaba permitida al dueño y las fotos siguen limitadas a menos de
+  400 000 caracteres base64. Falta probar el flujo en el teléfono con Expo Go.
+- **Aprendizaje:** (completar) Qué entendí de combinar Stack y Drawer sin duplicar rutas, de
+  separar los formularios de edición en un hook reutilizable y de reutilizar los validadores del
+  registro para que la edición no acepte datos que el registro rechazaría.
+
+
+
 
