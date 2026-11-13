@@ -275,6 +275,7 @@ Resumen de `firebase/firestore.rules`:
 | Fotos en base64 en Firestore | El plan Spark no incluye Storage; Cloudinary queda como mejora |
 | Ruta dibujada en línea recta con `Polyline` | La geometría real requiere Directions/Routes API; Distance Matrix ya da distancia y duración |
 | Distance Matrix opcional con respaldo local | La app funciona sin llave y nunca bloquea la cotización por un fallo de Google |
+| Fecha con selector nativo y texto editable | Cubre el requisito del PDF sin perder el formato `DD/MM/AAAA` ni las validaciones existentes |
 | Sin índices compuestos | Las consultas usan `array-contains` y filtros en el teléfono |
 | Totales calculados en el teléfono | No se guardan agregados en Firestore; menos escrituras y menos datos inconsistentes |
 | Idioma guardado en el perfil, UI en español | La spec pide el selector; la traducción completa queda fuera del alcance |

@@ -186,6 +186,7 @@ npm run test:pricing
   validaciones por campo: nombre y apellido (máximo 50 caracteres), correo, contraseña,
   documento, edad entre 18 y 80 años, celular, género, idioma, dirección, placa, año del
   vehículo (entre 1990 y el año actual), capacidad de pasajeros (XL exige mínimo 6),
+  fecha de nacimiento y vencimientos con **calendario nativo** (o texto `DD/MM/AAAA`),
   correo de Mercado Pago, aceptación de términos con el 20 % de comisión y vigencia de
   licencia y SOAT. La **tecnomecánica** solo se exige a vehículos con **6 años o más**. Las
   fotos de perfil, vehículo y documentos se comprimen y se guardan en
@@ -246,11 +247,11 @@ npm test
 
 La matriz completa está en [docs/SPEC_COMPLIANCE.md](docs/SPEC_COMPLIANCE.md). Resumen:
 
-- **Completo:** registro con validaciones (tecnomecánica condicional por año), disponibilidad y
-  GPS, solicitudes con 15 s y rechazo persistente, máquina de estados,
-  tarifa/comisión/propina, distancia y duración con Google Distance Matrix (opcional con
-  respaldo local), pago de prueba y efectivo, calificación, ganancias, historial con filtros,
-  detalle con mapa, perfil editable con Drawer de navegación, reglas de seguridad.
+- **Completo:** registro con validaciones (tecnomecánica condicional por año, selector nativo
+  de fecha), disponibilidad y GPS, solicitudes con 15 s y rechazo persistente, máquina de
+  estados, tarifa/comisión/propina, distancia y duración con Google Distance Matrix (opcional
+  con respaldo local), pago de prueba y efectivo, calificación, ganancias, historial con
+  filtros, detalle con mapa, perfil editable con Drawer de navegación, reglas de seguridad.
 - **Parcial:** ruta dibujada en línea recta (sin geometría de Google Directions), fotos en
   base64 (sin Cloudinary), pago real implementado pero sin desplegar.
 - **Pendiente:** notificaciones push (FCM), bitácora en PDF y video de 5 minutos.

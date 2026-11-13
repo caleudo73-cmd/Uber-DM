@@ -41,7 +41,7 @@ Leyenda:
 | Nombre máximo 50, solo letras y espacios | ✅ | `isValidFullName` |
 | Documento numérico de 6 a 10 dígitos | ✅ | `isValidDocumentNumber` |
 | Celular de 10 dígitos | ✅ | `isValidPhone` (empieza por 3) |
-| Fecha de nacimiento con **selector de fecha**, mayor de 18 | 🟡 | Se valida edad 18–80 y el formato `DD/MM/AAAA`, pero se escribe con teclado numérico; no hay selector nativo de calendario. |
+| Fecha de nacimiento con **selector de fecha**, mayor de 18 | ✅ | `DateField` abre el calendario nativo (`@react-native-community/datetimepicker`) y limita el rango a 18–80 años; el texto `DD/MM/AAAA` sigue siendo editable. |
 | Género en lista desplegable | ✅ | `Choice` con `GENDER_OPTIONS` |
 | Correo con validación de @ y dominio | ✅ | `isValidEmail` |
 | Idioma Español / inglés | ✅ | `LANGUAGE_OPTIONS`; se guarda en el perfil. La UI sigue en español. |
@@ -171,7 +171,7 @@ Leyenda:
 
 | Requisito | Estado | Nota |
 |---|---|---|
-| `docs/AI_LOG.md` en el repositorio | ✅ | Entradas #1–#12 |
+| `docs/AI_LOG.md` en el repositorio | ✅ | Entradas #1–#13 |
 | Cada entrada con fecha, integrante, herramienta, objetivo, prompt, resumen, uso/modificación/descarte, archivos, commit, verificación y aprendizaje | 🟡 | La estructura está; varios campos **“Integrante”** y **“Aprendizaje”** dicen `(completar)` |
 | README con sección **Uso de IA** y enlace | ✅ | `README.md` |
 | Bitácora exportada a PDF | ❌ | Pendiente para la entrega |
@@ -199,6 +199,7 @@ Leyenda:
 - **Perfil editable**: datos personales, vehículo, documentos, foto e idioma.
 - **Drawer** de navegación con inicio, perfil, historial, ganancias y configuración.
 - **Tecnomecánica condicional**: solo se exige en vehículos con 6 años o más.
+- **Selector nativo de fecha** para nacimiento y vencimientos, con texto editable.
 - **Google Distance Matrix** opcional para distancia y duración reales, con respaldo local.
 - Límite de 30 caracteres en marca y modelo.
 - Color del vehículo como lista desplegable.
@@ -218,4 +219,3 @@ Leyenda:
 - **FCM push**: requiere development build y configuración de Firebase Messaging.
 - **Google Directions** para dibujar la ruta real en el mapa: Distance Matrix ya aporta distancia y duración; falta la geometría codificada.
 - **Cloudinary**: requiere cuenta y plan gratuito; hoy base64 en Firestore.
-- **Selector nativo de fecha** para el registro.

@@ -471,6 +471,36 @@ Reglas:
   cálculo puro de la tarifa, de diseñar un respaldo que nunca bloquee al pasajero y de modelar
   una regla condicional (tecnomecánica) tanto en el formulario como en el payload.
 
+---
+
+### Entrada #13 - Fecha: 2026-11-12 - Integrante: (completar) - Herramienta: Asistente de código (Big Pickle / OpenCode)
+
+- **Objetivo:** Cerrar la brecha del **selector de fecha** que pide la especificación para la
+  fecha de nacimiento y los vencimientos de documentos.
+- **Prompt:** «haz los commits, o subelos https://github.com/caleudo73-cmd/Uber-DM ahi, y sigue
+  con lo que falte, el video lo hago yo».
+- **Resumen de la respuesta:** Se instaló `@react-native-community/datetimepicker` con
+  `npx expo install` (versión 9.2.1, incluida en Expo Go) y se agregó el plugin en `app.json`.
+  Se creó `components/DateField.js`, que mantiene el campo `DD/MM/AAAA` editable y añade un
+  botón de calendario con el selector nativo: diálogo en Android y rueda con botón *Listo* en
+  iOS. El campo se usa en el registro, en **Editar perfil** y en **Editar documentos**, con
+  límites de 18–80 años para el nacimiento y desde mañana para los vencimientos. `Input` ahora
+  acepta un accesorio a la derecha (`rightAccessory`) para el icono del calendario.
+- **Qué se usó / modificó / descartó:** Se reutilizaron `parseDateInput`, `formatDateInput` y
+  las validaciones existentes. Se descartó construir un calendario propio o una lista de días:
+  el selector nativo es el que pide la spec y funciona en Expo Go. Se mantuvo la escritura
+  manual para no obligar a usar el calendario y no romper las pruebas de validación.
+- **Archivos y commit:** `mobile/package.json`, `mobile/package-lock.json`, `mobile/app.json`,
+  `mobile/src/components/DateField.js` (nuevo), `mobile/src/components/Input.js`,
+  `mobile/src/components/DriverRegisterForm.js`, `mobile/src/screens/EditProfileScreen.js`,
+  `mobile/src/screens/EditDocumentsScreen.js` — commit: `fcb9fcf`.
+- **Verificación:** `cd mobile && npm test` → **76/76** (las pruebas de validación de fechas
+  siguen pasando). Bundle de Android exportado sin errores (~6 MB). Falta probar el selector en
+  un teléfono físico: después de instalar la dependencia hay que reiniciar Metro con
+  `npx expo start -c`.
+- **Aprendizaje:** (completar) Qué entendí de integrar un módulo nativo en Expo Go, de mantener
+  el texto editable junto al selector y de reutilizar un mismo campo de fecha en tres pantallas.
+
 
 
 

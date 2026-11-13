@@ -56,7 +56,7 @@ cd mobile
 npx expo export --platform android --output-dir "$env:TEMP\opencode\bundle-check" --clear
 ```
 
-Debe terminar con un `.hbc` de ~5,9 MB y `metadata.json`, sin errores.
+Debe terminar con un `.hbc` de ~6 MB y `metadata.json`, sin errores.
 
 ## 3. Verificación de reglas contra Firestore real
 
@@ -108,8 +108,9 @@ un emulador.
 
 - [ ] **Registro del conductor**: tres pestañas, errores debajo de cada campo, no deja enviar
       con campos vacíos, fotos obligatorias, marca/modelo de más de 30 se recorta, color es
-      lista, documentos vencidos se rechazan. Con un vehículo de menos de 6 años, la
-      tecnomecánica no aparece; con uno de 6 años o más, sí se exige.
+      lista, documentos vencidos se rechazan. La fecha de nacimiento y los vencimientos se
+      pueden elegir con el calendario nativo o escribir a mano. Con un vehículo de menos de
+      6 años, la tecnomecánica no aparece; con uno de 6 años o más, sí se exige.
 - [ ] **Aprobación**: el conductor recién registrado ve “Pendiente” y no puede ponerse
       Disponible. Al cambiar `approvalStatus` a `approved` en Firestore, la app se actualiza
       sin cerrar sesión.
