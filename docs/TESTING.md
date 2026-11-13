@@ -10,16 +10,17 @@ cd mobile
 npm test
 ```
 
-Salida esperada (62 pruebas):
+Salida esperada (76 pruebas):
 
 | Archivo | Pruebas | Qué cubre |
 |---|---:|---|
 | `scripts/pricing.test.mjs` | 8 | Tarifa base, distancia, tiempo, categorías, redondeo a 100, comisión, propina, ejemplo de la spec |
-| `scripts/validators.test.mjs` | 15 | Nombre, correo, contraseña, documento, celular, placa, año, capacidad XL, marca/modelo ≤ 30, fechas, edad y vigencia estricta de documentos |
+| `scripts/validators.test.mjs` | 16 | Nombre, correo, contraseña, documento, celular, placa, año, capacidad XL, marca/modelo ≤ 30, tecnomecánica por año, fechas, edad y vigencia estricta de documentos |
 | `scripts/countdown.test.mjs` | 6 | Segundos restantes, proporción de la barra, vencimiento y límites |
 | `scripts/earnings.test.mjs` | 16 | Totales por día/semana/mes, promedio, saldo y filtros del historial (estado, rol, fecha, método) |
 | `scripts/payments.test.mjs` | 11 | Métodos de pago, pago de prueba, transiciones y campos que puede escribir el pasajero |
 | `scripts/ratings.test.mjs` | 6 | Rango 1–5, promedio y reglas de calificación |
+| `scripts/directions.test.mjs` | 13 | Distance Matrix, redondeo, respaldo sin llave, errores HTTP, timeout lógico y coordenadas inválidas |
 
 También se puede correr una suite aislada:
 
@@ -30,6 +31,7 @@ npm run test:countdown
 npm run test:earnings
 npm run test:payments
 npm run test:ratings
+npm run test:directions
 ```
 
 ### Casos clave que deben seguir pasando
@@ -40,6 +42,9 @@ npm run test:ratings
 - La propina se suma completa a `driverEarnings` y no paga comisión.
 - Un documento que vence **hoy** ya no es válido (`> hoy`).
 - Marca/modelo de 31 caracteres no es válido.
+- Un vehículo de 2021 no exige tecnomecánica; uno de 2020 o anterior sí.
+- Sin llave de Google se usa la estimación local; con llave se usa Distance Matrix y, si
+  falla, se vuelve a la estimación sin romper la cotización.
 - El saldo puede ser negativo cuando hay más comisión de efectivo que ganancia con tarjeta.
 
 ## 2. Verificación del bundle
@@ -51,7 +56,7 @@ cd mobile
 npx expo export --platform android --output-dir "$env:TEMP\opencode\bundle-check" --clear
 ```
 
-Debe terminar con un `.hbc` de ~4,5 MB y `metadata.json`, sin errores.
+Debe terminar con un `.hbc` de ~5,9 MB y `metadata.json`, sin errores.
 
 ## 3. Verificación de reglas contra Firestore real
 
@@ -103,14 +108,16 @@ un emulador.
 
 - [ ] **Registro del conductor**: tres pestañas, errores debajo de cada campo, no deja enviar
       con campos vacíos, fotos obligatorias, marca/modelo de más de 30 se recorta, color es
-      lista, documentos vencidos se rechazan.
+      lista, documentos vencidos se rechazan. Con un vehículo de menos de 6 años, la
+      tecnomecánica no aparece; con uno de 6 años o más, sí se exige.
 - [ ] **Aprobación**: el conductor recién registrado ve “Pendiente” y no puede ponerse
       Disponible. Al cambiar `approvalStatus` a `approved` en Firestore, la app se actualiza
       sin cerrar sesión.
 - [ ] **Disponibilidad**: al activar el interruptor se pide permiso de ubicación y
       `users/{uid}.driverLocation` empieza a actualizarse; al desactivar, deja de escribir.
 - [ ] **Solicitud entrante**: el conductor ve origen, destino, distancia, duración,
-      categoría, método de pago, tarifa y ganancia neta.
+      categoría, método de pago, tarifa y ganancia neta. Si hay llave de Google, la distancia
+      y la duración deben coincidir con la ruta en coche; sin llave se usa la estimación local.
 - [ ] **Rechazar**: el viaje desaparece para ese conductor y sigue disponible para otro.
 - [ ] **Vencer**: dejar pasar 15 s sin tocar nada; la tarjeta desaparece y no reaparece.
 - [ ] **Aceptar**: el pasajero ve nombre, vehículo, color y placa del conductor.

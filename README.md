@@ -68,10 +68,13 @@ EXPO_PUBLIC_FIREBASE_PROJECT_ID=...
 EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET=...
 EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=...
 EXPO_PUBLIC_FIREBASE_APP_ID=...
+
+# Opcional: distancia y duración reales con Google Distance Matrix
+EXPO_PUBLIC_GOOGLE_MAPS_API_KEY=...
 ```
 
 Si faltan variables, la app muestra una pantalla con las claves pendientes en lugar de
-fallar en blanco.
+fallar en blanco. La llave de Google es opcional: sin ella se usa la estimación local.
 
 ```bash
 npx expo start -c
@@ -184,12 +187,15 @@ npm run test:pricing
   documento, edad entre 18 y 80 años, celular, género, idioma, dirección, placa, año del
   vehículo (entre 1990 y el año actual), capacidad de pasajeros (XL exige mínimo 6),
   correo de Mercado Pago, aceptación de términos con el 20 % de comisión y vigencia de
-  licencia, SOAT y tecnomecánica. Las fotos de perfil, vehículo y documentos se comprimen
-  y se guardan en `users/{uid}/documents`; la foto de perfil se muestra en el perfil.
+  licencia y SOAT. La **tecnomecánica** solo se exige a vehículos con **6 años o más**. Las
+  fotos de perfil, vehículo y documentos se comprimen y se guardan en
+  `users/{uid}/documents`; la foto de perfil se muestra en el perfil.
 - El conductor queda en estado **Pendiente** hasta que un administrador cambie
   `approvalStatus` a `approved` en Firestore.
 - El pasajero busca un destino, ve la estimación, elige **Efectivo** o **Tarjeta (prueba)** y
-  solicita el viaje.
+  solicita el viaje. La distancia y la duración se piden a **Google Distance Matrix** si
+  `EXPO_PUBLIC_GOOGLE_MAPS_API_KEY` está configurada; si no, se estiman localmente
+  (`trips.routeSource` indica `google` o `estimate`).
 - El conductor ve las solicitudes en tiempo real (`onSnapshot`), con la duración estimada y el
   método de pago, y puede **aceptar o rechazar**. Rechazar solo oculta el viaje para ese
   conductor (`trips.rejectedBy`) y el viaje sigue disponible para los demás. Luego marca
@@ -228,8 +234,8 @@ npm run test:pricing
   duración, categoría, tarifa, comisión, propina, ganancia del conductor, método y estado del
   pago, y datos del vehículo.
 
-Pruebas (tarifas, validaciones, cuenta regresiva, ganancias, historial, pagos y calificación;
-62 en total):
+Pruebas (tarifas, validaciones, cuenta regresiva, ganancias, historial, pagos, calificación y
+rutas; 76 en total):
 
 ```bash
 cd mobile
@@ -240,12 +246,13 @@ npm test
 
 La matriz completa está en [docs/SPEC_COMPLIANCE.md](docs/SPEC_COMPLIANCE.md). Resumen:
 
-- **Completo:** registro con validaciones, disponibilidad y GPS, solicitudes con 15 s y
-  rechazo persistente, máquina de estados, tarifa/comisión/propina, pago de prueba y efectivo,
-  calificación, ganancias, historial con filtros, detalle con mapa, perfil editable con
-  Drawer de navegación, reglas de seguridad.
-- **Parcial:** ruta en línea recta (sin Google Directions), fotos en base64 (sin Cloudinary),
-  tecnomecánica siempre obligatoria, pago real implementado pero sin desplegar.
+- **Completo:** registro con validaciones (tecnomecánica condicional por año), disponibilidad y
+  GPS, solicitudes con 15 s y rechazo persistente, máquina de estados,
+  tarifa/comisión/propina, distancia y duración con Google Distance Matrix (opcional con
+  respaldo local), pago de prueba y efectivo, calificación, ganancias, historial con filtros,
+  detalle con mapa, perfil editable con Drawer de navegación, reglas de seguridad.
+- **Parcial:** ruta dibujada en línea recta (sin geometría de Google Directions), fotos en
+  base64 (sin Cloudinary), pago real implementado pero sin desplegar.
 - **Pendiente:** notificaciones push (FCM), bitácora en PDF, video de 5 minutos y PR/merge a
   `main`.
 

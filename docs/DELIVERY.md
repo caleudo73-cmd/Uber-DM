@@ -37,10 +37,14 @@ EXPO_PUBLIC_FIREBASE_PROJECT_ID=...
 EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET=...
 EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=...
 EXPO_PUBLIC_FIREBASE_APP_ID=...
+
+# Opcional: distancia y duración reales con Google Distance Matrix
+EXPO_PUBLIC_GOOGLE_MAPS_API_KEY=...
 ```
 
 Los valores están en **Firebase Console → Configuración del proyecto → Tus apps → Web**.
-Si falta alguno, la app muestra una pantalla con las claves pendientes.
+Si falta alguno, la app muestra una pantalla con las claves pendientes. La llave de Google es
+opcional: sin ella la cotización usa la estimación local.
 
 ```bash
 npx expo start -c
@@ -76,7 +80,7 @@ Crea `pasajero@demo.com` y `conductor@demo.com` con clave `123456`.
 |---|---|---|
 | `npm install` | `mobile/` | Dependencias de la app |
 | `npx expo start -c` | `mobile/` | Metro con caché limpia |
-| `npm test` | `mobile/` | 62 pruebas automáticas |
+| `npm test` | `mobile/` | 76 pruebas automáticas |
 | `npx expo export --platform android` | `mobile/` | Verificar que el bundle compila |
 | `npx firebase deploy --only firestore:rules` | `firebase/` | Publicar reglas |
 | `npm run seed` | `firebase/functions/` | Crear usuarios demo |
@@ -108,7 +112,7 @@ Consejo: dejar la app ya abierta y con sesión iniciada para no gastar tiempo en
 
 | Archivo | Contenido | ¿Se commitea? |
 |---|---|---|
-| `mobile/.env.example` | Nombres de las variables de Firebase | ✅ Sí |
+| `mobile/.env.example` | Nombres de las variables de Firebase y Google Maps | ✅ Sí |
 | `mobile/.env` | Valores reales | ❌ No (ignorado) |
 | `firebase/functions/.env.example` | Nombres de Mercado Pago | ✅ Sí |
 | `firebase/functions/.env` | Access token de Mercado Pago | ❌ No (ignorado) |
@@ -134,14 +138,15 @@ en los prompts de IA.
 - El **pago con tarjeta es simulado** (modo prueba). El pago real con Mercado Pago está
   implementado pero no desplegado porque requiere el plan Blaze.
 - **No hay notificaciones push** (FCM requiere development build).
-- La **ruta es una línea recta**; no se usa Google Directions ni Distance Matrix.
+- La **ruta dibujada es una línea recta**. Con `EXPO_PUBLIC_GOOGLE_MAPS_API_KEY` la distancia
+  y la duración sí vienen de Google Distance Matrix; sin llave se estiman localmente.
 - Las **fotos van en base64** en Firestore; no se usa Cloudinary.
-- La **tecnomecánica se exige siempre**, sin condición por año del vehículo.
+- La **tecnomecánica** se exige solo a vehículos con **6 años o más**.
 - La UI está en **español**; el idioma se guarda en el perfil pero no traduce la app.
 
 ## 8. Antes de subir el video
 
-- [ ] `cd mobile && npm test` → 62/62.
+- [ ] `cd mobile && npm test` → 76/76.
 - [ ] `npx expo export --platform android` sin errores.
 - [ ] Reglas desplegadas y compiladas.
 - [ ] Base de datos sin viajes ni cuentas temporales de prueba.

@@ -433,6 +433,44 @@ Reglas:
   separar los formularios de edición en un hook reutilizable y de reutilizar los validadores del
   registro para que la edición no acepte datos que el registro rechazaría.
 
+---
+
+### Entrada #12 - Fecha: 2026-11-12 - Integrante: (completar) - Herramienta: Asistente de código (Big Pickle / OpenCode)
+
+- **Objetivo:** Cerrar dos brechas de la especificación: la **tecnomecánica condicional** según
+  la edad del vehículo y la **distancia/duración reales** con Google Distance Matrix, sin
+  romper la cotización cuando no haya llave o falle la API.
+- **Prompt:** «haz los commits, o subelos https://github.com/caleudo73-cmd/Uber-DM ahi, y sigue
+  con lo que falte, el video lo hago yo».
+- **Resumen de la respuesta:** Se agregó `needsTechnomechanical` (6 años o más) y se usó en el
+  registro, en la edición de documentos y en el payload: si el vehículo es más nuevo, los campos
+  y la foto de tecnomecánica se ocultan y se guardan como `null`. Se creó
+  `services/directionsService.js`, que consulta **Google Distance Matrix** cuando existe
+  `EXPO_PUBLIC_GOOGLE_MAPS_API_KEY`, con timeout de 6 s y respaldo a la estimación local
+  (distancia recta + `estimateDurationMin`). `quoteRide` y `requestRide` ahora son asíncronos y
+  guardan `trips.routeSource` (`google` o `estimate`). `calculateFare` no cambió.
+- **Qué se usó / modificó / descartó:** Se reutilizaron `distanceKm` y `estimateDurationMin`
+  como respaldo y `calculateFare` como única fuente de la tarifa. Se descartó Directions API
+  para trazar la ruta: solo se integra Distance Matrix, que da distancia y duración; el mapa
+  sigue dibujando una línea recta. Se descartó bloquear la cotización si Google falla: la app
+  siempre responde con la estimación local. La llave es de cliente, así que debe restringirse
+  por app y por API en Google Cloud; no se subió ningún valor real al repositorio.
+- **Archivos y commit:** `mobile/src/utils/validators.js`,
+  `mobile/src/hooks/useDriverRegisterForm.js`, `mobile/src/components/DriverRegisterForm.js`,
+  `mobile/src/screens/EditDocumentsScreen.js`, `mobile/src/services/directionsService.js`
+  (nuevo), `mobile/src/services/rideService.js`, `mobile/src/config/env.js`,
+  `mobile/src/utils/geo.js`, `mobile/.env.example`, `mobile/package.json`,
+  `mobile/scripts/validators.test.mjs`, `mobile/scripts/directions.test.mjs` (nuevo) —
+  commit: `beaedbb`.
+- **Verificación:** `cd mobile && npm test` → 8/8 tarifas, 16/16 validaciones, 6/6 cuenta
+  regresiva, 16/16 ganancias/historial, 11/11 pagos, 6/6 calificación y 13/13 rutas
+  (**76 en total**). Bundle de Android exportado sin errores (5,9 MB). No se pudo probar con una
+  llave real de Google: las pruebas usan un `fetch` simulado y comprueban el respaldo cuando la
+  API falla, responde con error HTTP o no encuentra ruta.
+- **Aprendizaje:** (completar) Qué entendí de separar la obtención de distancia/duración del
+  cálculo puro de la tarifa, de diseñar un respaldo que nunca bloquee al pasajero y de modelar
+  una regla condicional (tecnomecánica) tanto en el formulario como en el payload.
+
 
 
 

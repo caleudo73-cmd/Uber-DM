@@ -41,7 +41,7 @@ uber-app/
 │   │   ├── screens/           Una pantalla por flujo
 │   │   ├── components/        UI reutilizable (botones, tarjetas, mapas, modales)
 │   │   ├── hooks/             Lógica de estado y suscripciones
-│   │   ├── services/          Acceso a Firebase, pagos y lugares
+│   │   ├── services/          Acceso a Firebase, pagos, lugares y rutas (Directions)
 │   │   └── utils/             Funciones puras y testeables
 │   └── scripts/               Pruebas con Node (sin Jest)
 ├── firebase/
@@ -128,7 +128,8 @@ Colección `trips` (nombres en inglés, como pide la spec):
 | `passengerName`, `driverName`, `driver` | string / object | Copia para mostrar sin joins |
 | `participants` | array | `[passengerId]` y luego `[passengerId, driverId]` |
 | `origin`, `destination` | `{ latitude, longitude, name, address }` | Puntos del viaje |
-| `distanceKm`, `durationMin` | number | Distancia recta y duración estimada |
+| `distanceKm`, `durationMin` | number | Distancia y duración reales (Distance Matrix) o estimación local |
+| `routeSource` | string | `google` o `estimate`; indica de dónde salieron la distancia y la duración |
 | `category` | string | `economy` / `xl` / `premium` |
 | `fare`, `commission`, `tip`, `driverEarnings` | number | COP enteros |
 | `commissionRate` | number | `0.20`, congelado por viaje |
@@ -184,6 +185,23 @@ calculateFare({ distanceKm, durationMin, category, tip })
 
 La estimación del pasajero y el cierre del conductor llaman a la misma función. El
 `commissionRate` se guarda en cada viaje para que un cambio futuro no altere el historial.
+
+### Distancia y duración del recorrido
+
+`services/directionsService.js` obtiene `{ distanceKm, durationMin }` antes de llamar a
+`calculateFare`:
+
+1. Si `EXPO_PUBLIC_GOOGLE_MAPS_API_KEY` está configurada, consulta **Google Distance
+   Matrix** (`mode=driving`, unidades métricas, español) con un tiempo máximo de 6 s.
+2. Si la llave falta, la API falla, responde sin ruta o se agota el tiempo, usa la
+   estimación local: distancia en línea recta (`utils/geo.js`) y
+   `estimateDurationMin(km) = ceil(km * 2.5) + 2`.
+3. El origen de los datos se guarda en `trips.routeSource` (`google` o `estimate`).
+
+La llave es opcional y se restringe en Google Cloud a las apps Android/iOS y a Distance
+Matrix API. No es un secreto de servidor: `EXPO_PUBLIC_*` queda dentro del bundle, por eso
+la restricción por firma de la app es obligatoria. El trazo del mapa sigue siendo una
+`Polyline` recta; la geometría real requeriría Directions API o Routes API.
 
 ## 7. Pagos
 
@@ -255,8 +273,8 @@ Resumen de `firebase/firestore.rules`:
 |---|---|
 | Firebase JS SDK (no `@react-native-firebase`) | Funciona en Expo Go sin development build |
 | Fotos en base64 en Firestore | El plan Spark no incluye Storage; Cloudinary queda como mejora |
-| Ruta en línea recta con `Polyline` | Evita consumo de Directions/Distance Matrix; la API key queda pendiente |
-| Duración estimada `km * 2.5 + 2` | Sustituible por Distance Matrix sin cambiar la interfaz de `calculateFare` |
+| Ruta dibujada en línea recta con `Polyline` | La geometría real requiere Directions/Routes API; Distance Matrix ya da distancia y duración |
+| Distance Matrix opcional con respaldo local | La app funciona sin llave y nunca bloquea la cotización por un fallo de Google |
 | Sin índices compuestos | Las consultas usan `array-contains` y filtros en el teléfono |
 | Totales calculados en el teléfono | No se guardan agregados en Firestore; menos escrituras y menos datos inconsistentes |
 | Idioma guardado en el perfil, UI en español | La spec pide el selector; la traducción completa queda fuera del alcance |
@@ -265,8 +283,8 @@ Resumen de `firebase/firestore.rules`:
 ## 11. Limitaciones conocidas
 
 - **Push (FCM)**: no implementado; requiere development build.
-- **Google Directions / Distance Matrix**: no conectado.
-- **Cloudinary**: no conectado.
-- **Tecnomecánica**: se exige siempre, sin condición por año del vehículo.
+- **Google Directions / geometría de la ruta**: Distance Matrix da distancia y duración, pero el
+  mapa dibuja una línea recta.
+- **Cloudinary**: no conectado; las fotos van en base64 en Firestore.
 - **Pago real**: implementado pero sin desplegar (requiere Blaze).
 - **`main`**: la rama de trabajo no se ha mergeado todavía.
