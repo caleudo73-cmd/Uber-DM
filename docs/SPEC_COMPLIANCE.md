@@ -183,8 +183,8 @@ Leyenda:
 
 | Entregable | Estado | Nota |
 |---|---|---|
-| Repositorio con ramas por integrante y PR revisados | 🟡 | Existe la rama `feat/firebase-setup`, pero **no hay PR ni merge a `main`**; `main` está atrás (`42bc218`) |
-| Merge en `main` | ❌ | Pendiente |
+| Repositorio con ramas por integrante y PR revisados | 🟡 | La rama `feat/firebase-setup` está fusionada en `main` y el remoto está actualizado. No se abrió PR porque `gh` no está instalado; GitHub ofrecía crearlo desde el navegador. |
+| Merge en `main` | ✅ | `main` incluye todos los commits de la rama de trabajo. |
 | README con instalación, variables `.env.example` y Uso de IA | ✅ | `README.md`, `mobile/.env.example` |
 | `docs/AI_LOG.md` | ✅ | Existe; faltan datos de integrantes |
 | `docs/AI_LOG.md` en PDF | ❌ | Pendiente |
@@ -210,9 +210,8 @@ Leyenda:
 
 ### Recomendadas para cerrar la entrega
 
-1. **PR y merge a `main`** con la bitácora incluida.
-2. **Bitácora en PDF** y **video** de 5 minutos.
-3. Completar los campos `(completar)` de `docs/AI_LOG.md`.
+1. **Bitácora en PDF** y **video** de 5 minutos.
+2. Completar los campos `(completar)` de `docs/AI_LOG.md`.
 
 ### Opcionales / requieren servicios externos
 

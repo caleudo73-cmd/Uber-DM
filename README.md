@@ -253,8 +253,7 @@ La matriz completa está en [docs/SPEC_COMPLIANCE.md](docs/SPEC_COMPLIANCE.md). 
   detalle con mapa, perfil editable con Drawer de navegación, reglas de seguridad.
 - **Parcial:** ruta dibujada en línea recta (sin geometría de Google Directions), fotos en
   base64 (sin Cloudinary), pago real implementado pero sin desplegar.
-- **Pendiente:** notificaciones push (FCM), bitácora en PDF, video de 5 minutos y PR/merge a
-  `main`.
+- **Pendiente:** notificaciones push (FCM), bitácora en PDF y video de 5 minutos.
 
 ## 8. Uso de IA
 

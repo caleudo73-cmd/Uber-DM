@@ -287,4 +287,3 @@ Resumen de `firebase/firestore.rules`:
   mapa dibuja una línea recta.
 - **Cloudinary**: no conectado; las fotos van en base64 en Firestore.
 - **Pago real**: implementado pero sin desplegar (requiere Blaze).
-- **`main`**: la rama de trabajo no se ha mergeado todavía.

@@ -9,12 +9,13 @@ Checklist para instalar, ejecutar, demostrar y entregar el proyecto.
 | Proyecto Firebase | `uberclone-7afa6` |
 | Región de Firestore | `us-central1` |
 | Rama de trabajo | `feat/firebase-setup` |
-| Rama principal | `main` (atrás, sin merge todavía) |
+| Rama principal | `main` (fusionada con `feat/firebase-setup`) |
 | Remoto | `https://github.com/caleudo73-cmd/Uber-DM.git` |
 | Último commit funcional | ver `git log --oneline` |
 
-> **Pendiente antes de entregar:** abrir PR de `feat/firebase-setup` → `main`, revisarlo y
-> hacer merge. La spec exige ramas por integrante, PR revisados y merge en `main`.
+> La rama de trabajo ya está fusionada y subida a `main`. No se abrió PR porque `gh` no está
+> instalado en el equipo; el merge se hizo localmente y se subió al remoto. Si se necesita el PR
+> para la rúbrica, se puede abrir desde GitHub con la rama `feat/firebase-setup`.
 
 ## 2. Instalación desde cero
 
@@ -124,7 +125,7 @@ en los prompts de IA.
 
 | Entregable | Estado | Acción |
 |---|---|---|
-| Repositorio con ramas y PR | 🟡 | Crear PR y mergear `feat/firebase-setup` a `main` |
+| Repositorio con ramas y PR | ✅ | `feat/firebase-setup` fusionada en `main` y subida al remoto |
 | README con instalación y Uso de IA | ✅ | `README.md` |
 | `docs/AI_LOG.md` | 🟡 | Completar integrantes y aprendizajes |
 | Bitácora en PDF | ❌ | Exportar `docs/AI_LOG.md` a PDF |
@@ -152,5 +153,5 @@ en los prompts de IA.
 - [ ] Base de datos sin viajes ni cuentas temporales de prueba.
 - [ ] `docs/AI_LOG.md` sin campos `(completar)`.
 - [ ] README y documentos con los enlaces correctos.
-- [ ] PR mergeado a `main`.
+- [ ] Rama fusionada y subida a `main`.
 - [ ] Video de máximo 5 minutos.
