@@ -13,6 +13,7 @@ import {
   VEHICLE_COLORS,
 } from '../config/driverRegistration';
 import Button from './Button';
+import Choice, { LabeledChoice } from './Choice';
 import ErrorText from './ErrorText';
 import Input from './Input';
 import PhotoPicker from './PhotoPicker';
@@ -25,36 +26,6 @@ const DOCUMENT_FIELD = {
   soat: { number: 'soatNumber', expiry: 'soatExpiresAt' },
   technomechanical: { number: 'technomechanicalNumber', expiry: 'technomechanicalExpiresAt' },
 };
-
-function Choice({ options, value, onChange }) {
-  return (
-    <View style={styles.choiceRow}>
-      {options.map((option) => {
-        const selected = option.value === value;
-        return (
-          <Pressable
-            key={option.value}
-            onPress={() => onChange(option.value)}
-            style={[styles.choice, selected && styles.choiceSelected]}
-          >
-            <Text style={[styles.choiceText, selected && styles.choiceTextSelected]}>
-              {option.label}
-            </Text>
-          </Pressable>
-        );
-      })}
-    </View>
-  );
-}
-
-function LabeledChoice({ label, children }) {
-  return (
-    <View style={styles.labeledChoice}>
-      <Text style={styles.label}>{label}</Text>
-      {children}
-    </View>
-  );
-}
 
 function PersonalStep({ form }) {
   const { values, errors, setField, photos, setPhoto } = form;
@@ -138,13 +109,12 @@ function PersonalStep({ form }) {
         error={errors.phone}
       />
 
-      <LabeledChoice label="Género">
+      <LabeledChoice label="Género" error={errors.gender}>
         <Choice
           options={GENDER_OPTIONS}
           value={values.gender}
           onChange={(value) => setField('gender', value)}
         />
-        {errors.gender ? <Text style={styles.fieldError}>{errors.gender}</Text> : null}
       </LabeledChoice>
 
       <Input
@@ -163,13 +133,12 @@ function PersonalStep({ form }) {
         error={errors.address}
       />
 
-      <LabeledChoice label="Idioma">
+      <LabeledChoice label="Idioma" error={errors.language}>
         <Choice
           options={LANGUAGE_OPTIONS}
           value={values.language}
           onChange={(value) => setField('language', value)}
         />
-        {errors.language ? <Text style={styles.fieldError}>{errors.language}</Text> : null}
       </LabeledChoice>
     </>
   );
@@ -217,13 +186,12 @@ function VehicleStep({ form }) {
         hint="Formato de carro: ABC123"
         error={errors.vehiclePlate}
       />
-      <LabeledChoice label="Color">
+      <LabeledChoice label="Color" error={errors.vehicleColor}>
         <Choice
           options={VEHICLE_COLORS}
           value={values.vehicleColor}
           onChange={(value) => setField('vehicleColor', value)}
         />
-        {errors.vehicleColor ? <Text style={styles.fieldError}>{errors.vehicleColor}</Text> : null}
       </LabeledChoice>
       <Input
         label="Capacidad de pasajeros"
@@ -236,7 +204,7 @@ function VehicleStep({ form }) {
         error={errors.vehicleCapacity}
       />
 
-      <LabeledChoice label="Categoría del servicio">
+      <LabeledChoice label="Categoría del servicio" error={errors.vehicleCategory}>
         <Choice
           options={VEHICLE_CATEGORIES}
           value={values.vehicleCategory}
@@ -373,20 +341,6 @@ export default function DriverRegisterForm({ form }) {
 }
 
 const styles = StyleSheet.create({
-  choiceRow: { flexDirection: 'row', gap: spacing.sm, flexWrap: 'wrap' },
-  choice: {
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
-    borderRadius: radius.pill,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  choiceSelected: { backgroundColor: colors.primary, borderColor: colors.primary },
-  choiceText: { color: colors.textPrimary, fontSize: fontSize.sm, fontWeight: fontWeight.medium },
-  choiceTextSelected: { color: colors.primaryText },
-  labeledChoice: { marginBottom: spacing.md },
-  label: { color: colors.textSecondary, fontSize: fontSize.sm, marginBottom: spacing.xs },
   fieldError: { color: colors.danger, fontSize: fontSize.sm, marginTop: spacing.xs },
   terms: {
     flexDirection: 'row',

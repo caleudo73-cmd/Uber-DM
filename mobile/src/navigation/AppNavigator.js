@@ -1,22 +1,28 @@
 import { ActivityIndicator, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { createDrawerNavigator } from '@react-navigation/drawer';
 import theme from '../config/theme';
 import { ROLES } from '../config/constants';
 import useAuth from '../hooks/useAuth';
-import DriverHomeScreen from '../screens/DriverHomeScreen';
+import AppDrawerContent from '../components/AppDrawerContent';
 import EarningsScreen from '../screens/EarningsScreen';
+import EditDocumentsScreen from '../screens/EditDocumentsScreen';
+import EditProfileScreen from '../screens/EditProfileScreen';
+import EditVehicleScreen from '../screens/EditVehicleScreen';
 import FirebaseConfigScreen from '../screens/FirebaseConfigScreen';
 import HistoryScreen from '../screens/HistoryScreen';
+import HomeScreen from '../screens/HomeScreen';
 import LoginScreen from '../screens/LoginScreen';
-import PassengerHomeScreen from '../screens/PassengerHomeScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import RegisterScreen from '../screens/RegisterScreen';
 import RideDetailScreen from '../screens/RideDetailScreen';
+import SettingsScreen from '../screens/SettingsScreen';
 
 const Stack = createNativeStackNavigator();
+const Drawer = createDrawerNavigator();
 
-// Las pantallas internas comparten el mismo encabezado.
+// Las pantallas internas del Stack comparten el mismo encabezado.
 const innerOptions = (title) => ({
   headerShown: true,
   title,
@@ -24,6 +30,34 @@ const innerOptions = (title) => ({
   headerStyle: { backgroundColor: theme.colors.background },
   headerShadowVisible: false,
 });
+
+// El Drawer agrupa las pantallas de la especificación: inicio, perfil,
+// historial, ganancias y configuración. El Stack conserva el flujo del viaje
+// y las pantallas de edición con botón de regreso.
+function MainDrawer() {
+  const { user } = useAuth();
+  const isDriver = user?.role === ROLES.DRIVER;
+
+  return (
+    <Drawer.Navigator
+      drawerContent={(props) => <AppDrawerContent {...props} />}
+      screenOptions={{
+        headerTintColor: theme.colors.textPrimary,
+        headerStyle: { backgroundColor: theme.colors.background },
+        headerShadowVisible: false,
+        drawerStyle: { backgroundColor: theme.colors.background, width: 300 },
+      }}
+    >
+      <Drawer.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
+      <Drawer.Screen name="Profile" component={ProfileScreen} options={{ title: 'Mi perfil' }} />
+      <Drawer.Screen name="History" component={HistoryScreen} options={{ title: 'Historial' }} />
+      {isDriver ? (
+        <Drawer.Screen name="Earnings" component={EarningsScreen} options={{ title: 'Ganancias' }} />
+      ) : null}
+      <Drawer.Screen name="Settings" component={SettingsScreen} options={{ title: 'Configuración' }} />
+    </Drawer.Navigator>
+  );
+}
 
 export default function AppNavigator() {
   const { user, booting, configError } = useAuth();
@@ -47,17 +81,28 @@ export default function AppNavigator() {
             <Stack.Screen name="Register" component={RegisterScreen} />
           </>
         )}
-        {user?.role === ROLES.PASSENGER && <Stack.Screen name="PassengerHome" component={PassengerHomeScreen} />}
-        {user?.role === ROLES.DRIVER && <Stack.Screen name="DriverHome" component={DriverHomeScreen} />}
         {user && (
           <>
-            <Stack.Screen name="Profile" component={ProfileScreen} options={innerOptions('Mi perfil')} />
-            <Stack.Screen name="Earnings" component={EarningsScreen} options={innerOptions('Ganancias')} />
-            <Stack.Screen name="History" component={HistoryScreen} options={innerOptions('Historial')} />
+            <Stack.Screen name="Main" component={MainDrawer} />
             <Stack.Screen
               name="RideDetail"
               component={RideDetailScreen}
               options={innerOptions('Detalle del viaje')}
+            />
+            <Stack.Screen
+              name="EditProfile"
+              component={EditProfileScreen}
+              options={innerOptions('Editar datos personales')}
+            />
+            <Stack.Screen
+              name="EditVehicle"
+              component={EditVehicleScreen}
+              options={innerOptions('Editar vehículo')}
+            />
+            <Stack.Screen
+              name="EditDocuments"
+              component={EditDocumentsScreen}
+              options={innerOptions('Editar documentos')}
             />
           </>
         )}

@@ -1,7 +1,33 @@
-import { collection, doc, getDoc, getDocs, query, serverTimestamp, updateDoc, where } from 'firebase/firestore';
+import { collection, doc, getDoc, getDocs, query, serverTimestamp, setDoc, updateDoc, where } from 'firebase/firestore';
 import { RIDE_STATUS } from '../config/constants';
 import { db, requireFirebase } from './firebase';
 import { toRide } from './rideService';
+
+// Actualiza campos del perfil. El contexto escucha users/{uid}, así que la app
+// refleja el cambio sin cerrar sesión.
+export const updateProfileFields = async (uid, fields) => {
+  await updateDoc(doc(db, 'users', uid), { ...fields, updatedAt: serverTimestamp() });
+};
+
+// Guarda una foto de la subcolección de documentos (base64 comprimido).
+export const saveDocumentPhoto = async (uid, key, photo) => {
+  if (!photo?.base64) return;
+  await setDoc(doc(db, 'users', uid, 'documents', key), {
+    type: key,
+    base64: photo.base64,
+    mimeType: photo.mimeType ?? 'image/jpeg',
+    updatedAt: serverTimestamp(),
+  });
+};
+
+// Devuelve la foto como data URI para mostrarla en PhotoPicker.
+export const getDocumentPhoto = async (uid, key) => {
+  if (!uid) return null;
+  const snapshot = await getDoc(doc(db, 'users', uid, 'documents', key));
+  if (!snapshot.exists()) return null;
+  const { base64, mimeType } = snapshot.data();
+  return base64 ? { uri: `data:${mimeType ?? 'image/jpeg'};base64,${base64}` } : null;
+};
 
 // El conductor decide si recibe solicitudes. Se guarda en su perfil para que
 // el estado sobreviva a reinicios y se vea igual desde cualquier dispositivo.

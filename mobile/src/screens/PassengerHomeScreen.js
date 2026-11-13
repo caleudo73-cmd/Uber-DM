@@ -33,7 +33,10 @@ export default function PassengerHomeScreen({ navigation }) {
   return (
     <View style={styles.container}>
       <RideMap origin={location} destination={ride ? ride.destination : destination} />
-      <TopBar onProfile={() => navigation.navigate('Profile')} />
+      <TopBar
+        onMenu={() => navigation.openDrawer()}
+        onProfile={() => navigation.navigate('Profile')}
+      />
 
       <View style={styles.bottom}>
         <BottomSheet>

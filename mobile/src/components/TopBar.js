@@ -1,26 +1,45 @@
 import { Pressable, StyleSheet, Text } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import theme from '../config/theme';
 import useAuth from '../hooks/useAuth';
 
 const { colors, spacing, fontSize, fontWeight } = theme;
 
-// Círculo con la inicial del usuario, abre el perfil.
-export default function TopBar({ onProfile }) {
+// Botón de menú (Drawer) y círculo con la inicial del usuario.
+export default function TopBar({ onMenu, onProfile }) {
   const insets = useSafeAreaInsets();
   const { user } = useAuth();
+  const top = insets.top + spacing.sm;
 
   return (
-    <Pressable onPress={onProfile} style={[styles.avatar, { top: insets.top + spacing.sm }]}>
-      <Text style={styles.initial}>{user?.name?.[0]?.toUpperCase() ?? '?'}</Text>
-    </Pressable>
+    <>
+      {onMenu ? (
+        <Pressable
+          onPress={onMenu}
+          style={[styles.button, styles.menu, { top }]}
+          accessibilityRole="button"
+          accessibilityLabel="Abrir menú"
+        >
+          <Ionicons name="menu" size={26} color={colors.primaryText} />
+        </Pressable>
+      ) : null}
+
+      <Pressable
+        onPress={onProfile}
+        style={[styles.button, styles.avatar, { top }]}
+        accessibilityRole="button"
+        accessibilityLabel="Abrir mi perfil"
+      >
+        <Text style={styles.initial}>{user?.name?.[0]?.toUpperCase() ?? '?'}</Text>
+      </Pressable>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
-  avatar: {
+  button: {
     position: 'absolute',
-    left: spacing.md,
     width: 48,
     height: 48,
     borderRadius: 24,
@@ -32,5 +51,7 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 6,
   },
+  menu: { left: spacing.md },
+  avatar: { right: spacing.md },
   initial: { color: colors.primaryText, fontSize: fontSize.lg, fontWeight: fontWeight.bold },
 });

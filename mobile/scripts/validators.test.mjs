@@ -4,6 +4,7 @@
 import assert from 'node:assert/strict';
 import {
   formatDateInput,
+  fromISODate,
   hasAcceptedTerms,
   isNotExpired,
   isRequired,
@@ -103,6 +104,8 @@ test('Fechas DD/MM/AAAA', () => {
   assert.equal(formatDateInput('15/08/1999'), '15/08/1999');
   assert.equal(formatDateInput('1508'), '15/08');
   assert.equal(toISODate('15/08/1999'), '1999-08-15');
+  assert.equal(fromISODate('1999-08-15'), '15/08/1999');
+  assert.equal(fromISODate(''), '');
   assert.equal(parseDateInput('31/02/2000'), null);
   assert.equal(parseDateInput('15/08/1999') instanceof Date, true);
 });

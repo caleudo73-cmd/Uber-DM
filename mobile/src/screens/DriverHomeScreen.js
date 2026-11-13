@@ -185,7 +185,10 @@ export default function DriverHomeScreen({ navigation }) {
   if (user?.approvalStatus && user.approvalStatus !== APPROVAL_STATUS.APPROVED) {
     return (
       <View style={styles.container}>
-        <TopBar onProfile={() => navigation.navigate('Profile')} />
+        <TopBar
+          onMenu={() => navigation.openDrawer()}
+          onProfile={() => navigation.navigate('Profile')}
+        />
         <View style={styles.bottom}>
           <BottomSheet>
             <PendingApproval user={user} onSignOut={signOut} />
@@ -198,7 +201,10 @@ export default function DriverHomeScreen({ navigation }) {
   return (
     <View style={styles.container}>
       <RideMap origin={currentRide?.origin} destination={currentRide?.destination} />
-      <TopBar onProfile={() => navigation.navigate('Profile')} />
+      <TopBar
+        onMenu={() => navigation.openDrawer()}
+        onProfile={() => navigation.navigate('Profile')}
+      />
 
       <View style={styles.bottom}>
         <BottomSheet>

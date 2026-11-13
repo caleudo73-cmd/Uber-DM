@@ -141,3 +141,10 @@ export const toISODate = (value) => {
   const pad = (n) => String(n).padStart(2, '0');
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 };
+
+// Convierte una fecha ISO (2026-11-12) al formato de los formularios.
+export const fromISODate = (value) => {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(value ?? '').trim());
+  if (!match) return '';
+  return `${match[3]}/${match[2]}/${match[1]}`;
+};
