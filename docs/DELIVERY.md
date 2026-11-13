@@ -81,7 +81,7 @@ Crea `pasajero@demo.com` y `conductor@demo.com` con clave `123456`.
 |---|---|---|
 | `npm install` | `mobile/` | Dependencias de la app |
 | `npx expo start -c` | `mobile/` | Metro con caché limpia |
-| `npm test` | `mobile/` | 76 pruebas automáticas |
+| `npm test` | `mobile/` | 81 pruebas automáticas |
 | `npx expo export --platform android` | `mobile/` | Verificar que el bundle compila |
 | `npx firebase deploy --only firestore:rules` | `firebase/` | Publicar reglas |
 | `npm run seed` | `firebase/functions/` | Crear usuarios demo |
@@ -139,15 +139,16 @@ en los prompts de IA.
 - El **pago con tarjeta es simulado** (modo prueba). El pago real con Mercado Pago está
   implementado pero no desplegado porque requiere el plan Blaze.
 - **No hay notificaciones push** (FCM requiere development build).
-- La **ruta dibujada es una línea recta**. Con `EXPO_PUBLIC_GOOGLE_MAPS_API_KEY` la distancia
-  y la duración sí vienen de Google Distance Matrix; sin llave se estiman localmente.
+- Con `EXPO_PUBLIC_GOOGLE_MAPS_API_KEY` la distancia y la duración vienen de **Distance
+  Matrix** y la ruta del detalle se dibuja con **Directions**; sin llave se usan la estimación
+  local y una línea recta. No hay navegación giro a giro.
 - Las **fotos van en base64** en Firestore; no se usa Cloudinary.
 - La **tecnomecánica** se exige solo a vehículos con **6 años o más**.
 - La UI está en **español**; el idioma se guarda en el perfil pero no traduce la app.
 
 ## 8. Antes de subir el video
 
-- [ ] `cd mobile && npm test` → 76/76.
+- [ ] `cd mobile && npm test` → 81/81.
 - [ ] `npx expo export --platform android` sin errores.
 - [ ] Reglas desplegadas y compiladas.
 - [ ] Base de datos sin viajes ni cuentas temporales de prueba.

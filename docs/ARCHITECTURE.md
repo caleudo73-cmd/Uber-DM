@@ -199,9 +199,12 @@ La estimación del pasajero y el cierre del conductor llaman a la misma función
 3. El origen de los datos se guarda en `trips.routeSource` (`google` o `estimate`).
 
 La llave es opcional y se restringe en Google Cloud a las apps Android/iOS y a Distance
-Matrix API. No es un secreto de servidor: `EXPO_PUBLIC_*` queda dentro del bundle, por eso
-la restricción por firma de la app es obligatoria. El trazo del mapa sigue siendo una
-`Polyline` recta; la geometría real requeriría Directions API o Routes API.
+Matrix API y Directions API. No es un secreto de servidor: `EXPO_PUBLIC_*` queda dentro del
+bundle, por eso la restricción por firma de la app es obligatoria.
+
+`getRouteGeometry` usa **Directions API** para obtener la geometría del recorrido y
+`decodePolyline` la convierte en coordenadas para `react-native-maps`. `RideMap` la usa en el
+detalle del viaje y, si falta la llave o Google falla, dibuja una `Polyline` recta.
 
 ## 7. Pagos
 
@@ -273,7 +276,7 @@ Resumen de `firebase/firestore.rules`:
 |---|---|
 | Firebase JS SDK (no `@react-native-firebase`) | Funciona en Expo Go sin development build |
 | Fotos en base64 en Firestore | El plan Spark no incluye Storage; Cloudinary queda como mejora |
-| Ruta dibujada en línea recta con `Polyline` | La geometría real requiere Directions/Routes API; Distance Matrix ya da distancia y duración |
+| Ruta con Directions opcional y respaldo recto | El detalle muestra la geometría real si hay llave; sin llave o si Google falla, se dibuja una línea recta |
 | Distance Matrix opcional con respaldo local | La app funciona sin llave y nunca bloquea la cotización por un fallo de Google |
 | Fecha con selector nativo y texto editable | Cubre el requisito del PDF sin perder el formato `DD/MM/AAAA` ni las validaciones existentes |
 | Sin índices compuestos | Las consultas usan `array-contains` y filtros en el teléfono |
@@ -284,7 +287,6 @@ Resumen de `firebase/firestore.rules`:
 ## 11. Limitaciones conocidas
 
 - **Push (FCM)**: no implementado; requiere development build.
-- **Google Directions / geometría de la ruta**: Distance Matrix da distancia y duración, pero el
-  mapa dibuja una línea recta.
+- **Navegación giro a giro**: no implementada; Directions solo dibuja la ruta en el mapa.
 - **Cloudinary**: no conectado; las fotos van en base64 en Firestore.
 - **Pago real**: implementado pero sin desplegar (requiere Blaze).

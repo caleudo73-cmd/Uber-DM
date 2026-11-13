@@ -9,7 +9,7 @@ Leyenda:
 - 🟡 **Parcial**: funciona, pero con una simplificación o falta un detalle de la spec.
 - ❌ **No cumple / pendiente**: no está implementado.
 
-> Última revisión: 2026-11-12. Comando de pruebas: `cd mobile && npm test` → **76/76**.
+> Última revisión: 2026-11-12. Comando de pruebas: `cd mobile && npm test` → **81/81**.
 > Bundle Android exportado sin errores.
 
 ---
@@ -21,7 +21,7 @@ Leyenda:
 | 1 | Registro del conductor con datos, vehículo y documentos, con validaciones | ✅ | `screens/RegisterScreen.js`, `components/DriverRegisterForm.js`, `hooks/useDriverRegisterForm.js`, `utils/validators.js` |
 | 2 | Disponible / No disponible y ubicación en tiempo real | ✅ | `hooks/useDriverAvailability.js`, `hooks/useDriverLocation.js`, `services/userService.js` |
 | 3 | Recepción de solicitudes con tiempo límite para aceptar o rechazar | ✅ | `hooks/useTripRequests.js`, `components/RideRequestCard.js` (15 s, rechazo automático persistente) |
-| 4 | Navegación al punto de recogida y al destino con Google Directions API | 🟡 | Distancia y duración reales con **Google Distance Matrix** cuando hay `EXPO_PUBLIC_GOOGLE_MAPS_API_KEY` (`services/directionsService.js`), con respaldo local. El trazo del mapa sigue siendo una **línea recta** con `Polyline`. |
+| 4 | Navegación al punto de recogida y al destino con Google Directions API | 🟡 | Con `EXPO_PUBLIC_GOOGLE_MAPS_API_KEY` se usan **Distance Matrix** (distancia/duración) y **Directions** (geometría de la ruta) en `services/directionsService.js`; sin llave se usa la estimación local y una línea recta. No hay navegación giro a giro. |
 | 5 | Cobro con Mercado Pago / Stripe en modo prueba y efectivo | 🟡 | Efectivo ✅ y **pago de prueba simulado** ✅. Checkout Pro real está implementado en `firebase/functions` pero **no desplegado** (requiere Blaze). Stripe no está integrado. |
 | 6 | Cálculo automático de tarifa, comisión y ganancia neta | ✅ | `utils/calculateFare.js`, `config/pricing.js` |
 | 7 | Historial con filtros y resumen de ganancias día/semana/mes | ✅ | `screens/HistoryScreen.js`, `screens/EarningsScreen.js`, `utils/history.js`, `utils/earnings.js` |
@@ -70,7 +70,7 @@ Leyenda:
 | El seguimiento se detiene al pasar a No disponible o salir de pantalla | ✅ | `useEffect` con `subscription.remove()` en la limpieza |
 | **Solicitud entrante**: origen, destino, distancia, duración, categoría, método de pago, tarifa y ganancia neta | ✅ | `RideRequestCard` |
 | Temporizador de 15 s y rechazo automático al llegar a cero | ✅ | `utils/countdown.js`; al vencer se guarda `rejectedBy` y desaparece |
-| **Viaje en curso**: ruta a recogida y cambio a destino al tocar *Pasajero a bordo* | 🟡 | Los estados y el mapa cambian correctamente. La distancia y la duración son reales con Distance Matrix (si hay llave); el trazo sigue siendo una línea recta. |
+| **Viaje en curso**: ruta a recogida y cambio a destino al tocar *Pasajero a bordo* | 🟡 | Los estados y el mapa cambian correctamente. La ruta se dibuja con Directions (si hay llave) y la distancia/duración son reales; sin llave, la ruta es una línea recta. |
 | Botón para finalizar el viaje | ✅ | `CurrentRidePanel` → `complete` |
 | **Cobro y resumen**: tarifa final, comisión, ganancia neta y estado del pago | ✅ | `ActiveRidePanel`, `RideDetailScreen`; estados Aprobado / Pendiente / Rechazado / Efectivo |
 | **Ganancias**: día, semana y mes | ✅ | `EarningsScreen` + `useEarnings` |
@@ -134,6 +134,7 @@ Leyenda:
 | Ganancias: viajes, facturado, comisiones, propinas, neto y promedio por viaje | ✅ | `summarizeEarnings` + `useEarnings` |
 | Saldo: ganancias con tarjeta − comisiones de efectivo | ✅ | `summarizeBalance` |
 | Distancia y duración desde Google Distance Matrix | ✅ | `services/directionsService.js`: Distance Matrix si hay llave; respaldo local en línea recta (`utils/geo.js`) si falta, falla o tarda más de 6 s. |
+| Ruta dibujada con Google Directions (geometría) | ✅ | `getRouteGeometry` + `decodePolyline`; el mapa usa la ruta real si hay llave y cae a la línea recta si no. |
 | Ejemplo 8,5 km / 22 min → 19.200 / 3.840 / 15.360 | ✅ | Probado en `scripts/pricing.test.mjs` |
 
 ---
@@ -146,7 +147,7 @@ Leyenda:
 | Filtros Hoy, Semana, Mes y Rango de fechas | ✅ | `utils/history.js`, rango `DD/MM/AAAA` inclusivo |
 | Filtro por método de pago | ✅ | `HISTORY_PAYMENT_FILTERS` |
 | Cada elemento: fecha y hora, origen → destino, categoría, tarifa, ganancia neta y estado del pago | ✅ | `RideRow` |
-| Detalle con ruta en el mapa, duración, distancia, comisión, propina y calificación | ✅ | `RideDetailScreen` (trazo recto entre origen y destino) |
+| Detalle con ruta en el mapa, duración, distancia, comisión, propina y calificación | ✅ | `RideDetailScreen` (ruta real con Directions si hay llave; línea recta como respaldo) |
 | Modelo de datos con los campos sugeridos | ✅ | `trips` en Firestore; además `participants`, `rejectedBy`, `driver`, `currency` |
 | Mensaje vacío cuando no hay viajes | ✅ | `ListEmptyComponent` |
 | Paginación o límite de la consulta | ✅ | “Ver más” de 10 en 10 en la UI; la suscripción trae los viajes del usuario |
@@ -171,7 +172,7 @@ Leyenda:
 
 | Requisito | Estado | Nota |
 |---|---|---|
-| `docs/AI_LOG.md` en el repositorio | ✅ | Entradas #1–#13 |
+| `docs/AI_LOG.md` en el repositorio | ✅ | Entradas #1–#14 |
 | Cada entrada con fecha, integrante, herramienta, objetivo, prompt, resumen, uso/modificación/descarte, archivos, commit, verificación y aprendizaje | 🟡 | La estructura está; varios campos **“Integrante”** y **“Aprendizaje”** dicen `(completar)` |
 | README con sección **Uso de IA** y enlace | ✅ | `README.md` |
 | Bitácora exportada a PDF | ❌ | Pendiente para la entrega |
@@ -201,6 +202,7 @@ Leyenda:
 - **Tecnomecánica condicional**: solo se exige en vehículos con 6 años o más.
 - **Selector nativo de fecha** para nacimiento y vencimientos, con texto editable.
 - **Google Distance Matrix** opcional para distancia y duración reales, con respaldo local.
+- **Geometría de la ruta con Directions** opcional, con respaldo a línea recta.
 - Límite de 30 caracteres en marca y modelo.
 - Color del vehículo como lista desplegable.
 - Vigencia estricta de documentos (`> hoy`).
@@ -217,5 +219,4 @@ Leyenda:
 ### Opcionales / requieren servicios externos
 
 - **FCM push**: requiere development build y configuración de Firebase Messaging.
-- **Google Directions** para dibujar la ruta real en el mapa: Distance Matrix ya aporta distancia y duración; falta la geometría codificada.
 - **Cloudinary**: requiere cuenta y plan gratuito; hoy base64 en Firestore.

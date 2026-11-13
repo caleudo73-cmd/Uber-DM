@@ -501,6 +501,34 @@ Reglas:
 - **Aprendizaje:** (completar) Qué entendí de integrar un módulo nativo en Expo Go, de mantener
   el texto editable junto al selector y de reutilizar un mismo campo de fecha en tres pantallas.
 
+---
+
+### Entrada #14 - Fecha: 2026-11-12 - Integrante: (completar) - Herramienta: Asistente de código (Big Pickle / OpenCode)
+
+- **Objetivo:** Completar la ruta del mapa con la **geometría real de Google Directions**, para
+  que el detalle del viaje no dibuje solo una línea recta cuando hay llave de Google.
+- **Prompt:** «haz los commits, o subelos https://github.com/caleudo73-cmd/Uber-DM ahi, y sigue
+  con lo que falte, el video lo hago yo».
+- **Resumen de la respuesta:** Se agregó a `services/directionsService.js` la llamada a
+  **Directions API** (`mode=driving`, español, timeout de 6 s) y el decodificador
+  `decodePolyline`, que convierte el `overview_polyline` en coordenadas de `react-native-maps`.
+  `getRouteGeometry` devuelve `null` si falta la llave, si Google falla o si no hay ruta.
+  `RideMap` pide la geometría solo cuando se muestra la ruta y cae a la línea recta si no la
+  obtiene. El texto del detalle ya no dice “línea recta”.
+- **Qué se usó / modificó / descartó:** Se reutilizó la llave `EXPO_PUBLIC_GOOGLE_MAPS_API_KEY`
+  y el mismo timeout de Distance Matrix. Se descartó la navegación giro a giro (requiere otra
+  pantalla y seguir la posición en vivo) y se descartó guardar la geometría en Firestore: se
+  pide al abrir el detalle y no se persiste. Las pruebas usan un `fetch` simulado y un polyline
+  público de Google; no se llamó a la API real.
+- **Archivos y commit:** `mobile/src/services/directionsService.js`,
+  `mobile/src/components/RideMap.js`, `mobile/src/screens/RideDetailScreen.js`,
+  `mobile/scripts/directions.test.mjs`, `mobile/.env.example` — commit: `689a5a9`.
+- **Verificación:** `cd mobile && npm test` → **81/81** (18 de rutas, incluidas la decodificación
+  del polyline y el respaldo recto). Bundle de Android exportado sin errores (~6 MB).
+- **Aprendizaje:** (completar) Qué entendí de decodificar un formato comprimido como el polyline,
+  de pedir datos opcionales sin bloquear la pantalla y de mantener siempre un respaldo visual
+  cuando una API externa falla.
+
 
 
 

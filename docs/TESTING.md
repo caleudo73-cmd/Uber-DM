@@ -10,7 +10,7 @@ cd mobile
 npm test
 ```
 
-Salida esperada (76 pruebas):
+Salida esperada (81 pruebas):
 
 | Archivo | Pruebas | Qué cubre |
 |---|---:|---|
@@ -20,7 +20,7 @@ Salida esperada (76 pruebas):
 | `scripts/earnings.test.mjs` | 16 | Totales por día/semana/mes, promedio, saldo y filtros del historial (estado, rol, fecha, método) |
 | `scripts/payments.test.mjs` | 11 | Métodos de pago, pago de prueba, transiciones y campos que puede escribir el pasajero |
 | `scripts/ratings.test.mjs` | 6 | Rango 1–5, promedio y reglas de calificación |
-| `scripts/directions.test.mjs` | 13 | Distance Matrix, redondeo, respaldo sin llave, errores HTTP, timeout lógico y coordenadas inválidas |
+| `scripts/directions.test.mjs` | 18 | Distance Matrix, redondeo, respaldo sin llave, errores HTTP, timeout lógico, coordenadas inválidas, polyline de Directions y geometría con respaldo recto |
 
 También se puede correr una suite aislada:
 
@@ -45,6 +45,8 @@ npm run test:directions
 - Un vehículo de 2021 no exige tecnomecánica; uno de 2020 o anterior sí.
 - Sin llave de Google se usa la estimación local; con llave se usa Distance Matrix y, si
   falla, se vuelve a la estimación sin romper la cotización.
+- El polyline de Directions se decodifica a coordenadas; si Directions falla o no hay ruta,
+  el mapa usa la línea recta.
 - El saldo puede ser negativo cuando hay más comisión de efectivo que ganancia con tarjeta.
 
 ## 2. Verificación del bundle
@@ -133,8 +135,8 @@ un emulador.
       promedio y saldo.
 - [ ] **Historial**: filtros por estado, rol, fecha (incluido rango `DD/MM/AAAA`) y método;
       “Ver más” pagina de 10 en 10; el mensaje vacío aparece cuando no hay viajes.
-- [ ] **Detalle**: mapa con ruta, distancia, duración, categoría, tarifa, comisión, propina,
-      ganancia, estado del pago y calificación.
+- [ ] **Detalle**: mapa con ruta real (Directions si hay llave; línea recta si no), distancia,
+      duración, categoría, tarifa, comisión, propina, ganancia, estado del pago y calificación.
 - [ ] **Drawer**: el botón de menú abre el panel con inicio, perfil, historial, ganancias
       (solo conductor) y configuración; el ítem activo se resalta.
 - [ ] **Perfil editable**: cambiar nombre, celular, ciudad y foto; guardar y ver el cambio

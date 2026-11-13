@@ -69,7 +69,7 @@ EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET=...
 EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=...
 EXPO_PUBLIC_FIREBASE_APP_ID=...
 
-# Opcional: distancia y duración reales con Google Distance Matrix
+# Opcional: distancia, duración y ruta reales con Google Distance Matrix y Directions
 EXPO_PUBLIC_GOOGLE_MAPS_API_KEY=...
 ```
 
@@ -196,7 +196,8 @@ npm run test:pricing
 - El pasajero busca un destino, ve la estimación, elige **Efectivo** o **Tarjeta (prueba)** y
   solicita el viaje. La distancia y la duración se piden a **Google Distance Matrix** si
   `EXPO_PUBLIC_GOOGLE_MAPS_API_KEY` está configurada; si no, se estiman localmente
-  (`trips.routeSource` indica `google` o `estimate`).
+  (`trips.routeSource` indica `google` o `estimate`). La ruta del detalle se dibuja con
+  **Google Directions** (misma llave) y cae a una línea recta si falla.
 - El conductor ve las solicitudes en tiempo real (`onSnapshot`), con la duración estimada y el
   método de pago, y puede **aceptar o rechazar**. Rechazar solo oculta el viaje para ese
   conductor (`trips.rejectedBy`) y el viaje sigue disponible para los demás. Luego marca
@@ -231,12 +232,12 @@ npm run test:pricing
   (todos / completados / cancelados), rol (pasajero / conductor), fecha (todo / hoy / semana /
   mes / rango de fechas `DD/MM/AAAA`) y método de pago, paginación "Ver más" de 10 en 10 y
   detalle completo de cada viaje.
-- **Detalle del viaje**: mapa con la ruta aproximada en línea recta, recorrido, distancia,
-  duración, categoría, tarifa, comisión, propina, ganancia del conductor, método y estado del
-  pago, y datos del vehículo.
+- **Detalle del viaje**: mapa con la ruta del recorrido (geometría de Directions si hay llave;
+  línea recta como respaldo), distancia, duración, categoría, tarifa, comisión, propina,
+  ganancia del conductor, método y estado del pago, y datos del vehículo.
 
 Pruebas (tarifas, validaciones, cuenta regresiva, ganancias, historial, pagos, calificación y
-rutas; 76 en total):
+rutas; 81 en total):
 
 ```bash
 cd mobile
@@ -249,11 +250,12 @@ La matriz completa está en [docs/SPEC_COMPLIANCE.md](docs/SPEC_COMPLIANCE.md). 
 
 - **Completo:** registro con validaciones (tecnomecánica condicional por año, selector nativo
   de fecha), disponibilidad y GPS, solicitudes con 15 s y rechazo persistente, máquina de
-  estados, tarifa/comisión/propina, distancia y duración con Google Distance Matrix (opcional
-  con respaldo local), pago de prueba y efectivo, calificación, ganancias, historial con
-  filtros, detalle con mapa, perfil editable con Drawer de navegación, reglas de seguridad.
-- **Parcial:** ruta dibujada en línea recta (sin geometría de Google Directions), fotos en
-  base64 (sin Cloudinary), pago real implementado pero sin desplegar.
+  estados, tarifa/comisión/propina, distancia y duración con Google Distance Matrix y ruta con
+  Directions (opcionales, con respaldo local), pago de prueba y efectivo, calificación,
+  ganancias, historial con filtros, detalle con mapa, perfil editable con Drawer de navegación,
+  reglas de seguridad.
+- **Parcial:** sin navegación giro a giro, fotos en base64 (sin Cloudinary), pago real
+  implementado pero sin desplegar.
 - **Pendiente:** notificaciones push (FCM), bitácora en PDF y video de 5 minutos.
 
 ## 8. Uso de IA
