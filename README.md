@@ -1,20 +1,23 @@
 # Uber App — versión conductor
 
-Aplicación móvil multiplataforma (React Native + Expo) inspirada en Uber. El repositorio
-incluye la app del pasajero y la app del conductor, con backend en Firebase
-(Authentication + Firestore en tiempo real). El pago con tarjeta funciona en **modo prueba
-simulado dentro de la app**; las Cloud Functions de Mercado Pago quedan como camino opcional
-para cuando se active el plan Blaze.
+Hice esta app como entrega de la especificación de UberClone. Está construida con React
+Native y Expo, y usa Firebase (Authentication y Firestore en tiempo real) como backend. En el
+mismo proyecto conviven la vista del pasajero y la del conductor.
 
-Documentación de entrega:
+El pago con tarjeta quedó en **modo prueba, simulado dentro de la app**. La idea era no
+depender de Blaze ni de una pasarela real para poder demostrar el flujo completo. Las Cloud
+Functions de Mercado Pago sí están escritas, pero las dejé como camino opcional para cuando
+se active el plan Blaze.
 
-- [Cumplimiento de la especificación](docs/SPEC_COMPLIANCE.md) — matriz ✅ / 🟡 / ❌ punto por punto.
-- [Arquitectura](docs/ARCHITECTURE.md) — capas, modelo de datos, estados, hooks y decisiones.
-- [Pruebas](docs/TESTING.md) — pruebas automáticas, reglas y lista de verificación manual.
-- [Guía de entrega](docs/DELIVERY.md) — instalación, comandos, guion de demo y pendientes.
+Si quieres revisar el detalle de la entrega, dejé estos documentos:
+
+- [Cumplimiento de la especificación](docs/SPEC_COMPLIANCE.md): la matriz punto por punto, con ✅, 🟡 y ❌.
+- [Arquitectura](docs/ARCHITECTURE.md): cómo están separadas las capas, el modelo de datos y las decisiones que tomé.
+- [Pruebas](docs/TESTING.md): pruebas automáticas y la lista que uso para verificar a mano.
+- [Guía de entrega](docs/DELIVERY.md): instalación, comandos y guion de la demo.
 - [Bitácora de IA](docs/AI_LOG.md) y [Pagos](docs/PAYMENTS.md).
 
-## Estructura
+## Cómo está organizado el repo
 
 ```
 uber-app/
@@ -35,22 +38,26 @@ uber-app/
 └── docs/                   Guías, bitácora, arquitectura y cumplimiento
 ```
 
-## Requisitos
+La regla que seguí fue simple: las pantallas no hablan con Firebase directamente. Pasan por
+hooks, los hooks por servicios y los servicios por el SDK. Lo que es cálculo puro (tarifas,
+validaciones, filtros) vive en `utils` y se puede probar sin levantar la app.
 
-- Node.js 20 o superior
-- Cuenta de Firebase (plan Spark sirve para Auth + Firestore)
-- Expo Go en el teléfono o un emulador
+## Qué necesitas para correrlo
+
+- Node.js 20 o superior.
+- Una cuenta de Firebase. Con el plan Spark alcanza para Auth y Firestore.
+- Expo Go en el teléfono, o un emulador.
 
 ## 1. Crear el proyecto en Firebase
 
-> Guía paso a paso con capturas de dónde hacer clic y solución de errores comunes:
-> [docs/FIREBASE_SETUP.md](docs/FIREBASE_SETUP.md).
+Dejé una guía con el paso a paso y los errores que me salieron en
+[docs/FIREBASE_SETUP.md](docs/FIREBASE_SETUP.md). En resumen:
 
 1. Entra a <https://console.firebase.google.com> y crea un proyecto.
-2. **Authentication** → *Comenzar* → habilita el proveedor **Correo electrónico/contraseña**.
-3. **Firestore Database** → *Crear base de datos* → modo producción → región `us-central1`.
-4. **Configuración del proyecto** → *Tus apps* → agrega una app **Web** (`</>`).
-5. Copia los valores del SDK a `mobile/.env` (ver el paso 2).
+2. En **Authentication** habilita el proveedor **Correo electrónico/contraseña**.
+3. En **Firestore Database** crea la base de datos en modo producción, región `us-central1`.
+4. En **Configuración del proyecto → Tus apps** agrega una app **Web** (`</>`).
+5. Copia esos valores al `.env` de la app (siguiente paso).
 
 ## 2. Configurar la app
 
@@ -59,7 +66,7 @@ cd mobile
 npm install
 ```
 
-Copia `mobile/.env.example` a `mobile/.env` y completa:
+Copia `mobile/.env.example` a `mobile/.env` y completa las variables:
 
 ```env
 EXPO_PUBLIC_FIREBASE_API_KEY=...
@@ -73,14 +80,15 @@ EXPO_PUBLIC_FIREBASE_APP_ID=...
 EXPO_PUBLIC_GOOGLE_MAPS_API_KEY=...
 ```
 
-Si faltan variables, la app muestra una pantalla con las claves pendientes en lugar de
-fallar en blanco. La llave de Google es opcional: sin ella se usa la estimación local.
+Si falta alguna variable de Firebase, la app muestra una pantalla con las claves pendientes en
+vez de quedarse en blanco. La llave de Google es opcional: sin ella la cotización usa la
+estimación local y el mapa dibuja una línea recta.
 
 ```bash
 npx expo start -c
 ```
 
-## 3. Publicar reglas y usuarios demo
+## 3. Reglas de Firestore y usuarios demo
 
 ```bash
 cd firebase
@@ -90,7 +98,7 @@ firebase login
 firebase deploy --only firestore:rules
 ```
 
-Para crear los usuarios demo (`pasajero@demo.com` y `conductor@demo.com`, clave `123456`):
+Para los usuarios demo (`pasajero@demo.com` y `conductor@demo.com`, clave `123456`):
 
 ```bash
 cd firebase/functions
@@ -101,31 +109,30 @@ $env:FIREBASE_PROJECT_ID="tu-proyecto"
 npm run seed
 ```
 
-El conductor demo queda **Aprobado**. Los conductores que se registran desde la app quedan
-en estado **Pendiente**; para aprobarlos cambia `approvalStatus` a `approved` en la consola
-de Firestore (colección `users`).
+El conductor demo queda **Aprobado**. Los que se registran desde la app quedan **Pendientes**;
+para aprobarlos cambio `approvalStatus` a `approved` en la consola de Firestore, colección
+`users`.
 
 ## 4. Pagos
 
-### Modo prueba (activo, sin costo)
+### Modo prueba (el que está activo)
 
-El pago con tarjeta está **simulado dentro de la app** y no requiere Blaze, Cloud Functions
-ni una cuenta de pasarela. Al finalizar el viaje, el pasajero abre un checkout de prueba con
-una tarjeta ficticia (`4242 4242 4242 4242`) y elige el resultado:
+El pago con tarjeta está simulado dentro de la app. No necesita Blaze, ni Cloud Functions, ni
+cuenta de pasarela. Cuando el viaje termina, el pasajero abre un checkout de prueba con una
+tarjeta ficticia (`4242 4242 4242 4242`) y escoge qué pasa:
 
 - **Aprobar**: el viaje pasa a `paid` con `paymentStatus: approved`.
-- **Rechazar**: el viaje sigue `completed` con `paymentStatus: rejected` y se puede reintentar.
+- **Rechazar**: el viaje queda en `completed` con `paymentStatus: rejected` y se puede reintentar.
 
-La app escribe esos campos solo para viajes con `paymentMethod: mercadopago_test`; las
-reglas de Firestore lo limitan y siguen bloqueando el pago real desde el cliente. El detalle
-está en [docs/PAYMENTS.md](docs/PAYMENTS.md).
+Esos campos solo se pueden escribir en viajes con `paymentMethod: mercadopago_test`, y las
+reglas de Firestore lo limitan. El pago real desde el cliente sigue bloqueado. Lo explico con
+más detalle en [docs/PAYMENTS.md](docs/PAYMENTS.md).
 
 ### Mercado Pago real (opcional, requiere Blaze)
 
-El camino con **Checkout Pro** ya está implementado en `firebase/functions` y se activa
-cuando quieras cobrar de verdad. Requiere el plan **Blaze** y credenciales de prueba de
-Mercado Pago. La guía paso a paso (credenciales, webhook, pruebas) está en
-[docs/PAYMENTS.md](docs/PAYMENTS.md).
+El camino con **Checkout Pro** ya está implementado en `firebase/functions`. Lo dejé listo pero
+sin desplegar. Para activarlo hacen falta el plan **Blaze** y credenciales de prueba de Mercado
+Pago:
 
 ```bash
 cd firebase/functions
@@ -136,23 +143,19 @@ firebase deploy --only functions
 firebase deploy --only firestore:rules
 ```
 
-Las funciones son:
+Las funciones que escribí son:
 
-- `createPaymentPreference`: recalcula la tarifa en el servidor, valida que el viaje sea del
-  pasajero y crea la preferencia de Checkout Pro. Devuelve `initPoint` (el checkout de
-  sandbox en modo prueba) para abrirlo con `expo-web-browser`.
-- `mercadoPagoWebhook`: valida la firma HMAC, consulta el pago contra la API, comprueba que
-  el monto coincida con la tarifa + propina y actualiza `paymentStatus`, `paymentId` y
-  `status: paid`.
-- `paymentReturn`: página que ve el usuario al volver del checkout.
-- `health`: verificación rápida del despliegue.
+- `createPaymentPreference`: recalcula la tarifa en el servidor, valida que el viaje sea del pasajero y crea la preferencia de Checkout Pro. Devuelve `initPoint` para abrirlo con `expo-web-browser`.
+- `mercadoPagoWebhook`: valida la firma HMAC, consulta el pago contra la API, revisa que el monto coincida con la tarifa más la propina y actualiza `paymentStatus`, `paymentId` y `status: paid`.
+- `paymentReturn`: la página que ve el usuario al volver del checkout.
+- `health`: una verificación rápida de que el despliegue quedó bien.
 
-El access token vive únicamente en `firebase/functions/.env` (excluido de Git). La app nunca
-lo ve. Solo se usan credenciales de prueba.
+El access token vive solo en `firebase/functions/.env`, que está por fuera de Git. La app nunca
+lo ve. Todo se probó con credenciales de prueba.
 
 ## 5. Tarifas y comisión
 
-Todos los parámetros están en `mobile/src/config/pricing.js` y la función pura en
+Los parámetros están en `mobile/src/config/pricing.js` y el cálculo en una sola función pura,
 `mobile/src/utils/calculateFare.js`:
 
 | Parámetro | Valor |
@@ -169,96 +172,97 @@ calculateFare({ distanceKm: 8.5, durationMin: 22, category: 'economy' });
 // { fare: 19200, commission: 3840, driverEarnings: 15360, commissionRate: 0.2 }
 ```
 
-La misma función se usa en la estimación del pasajero y al finalizar el viaje. Cada viaje
-guarda el `commissionRate` aplicado. La propina va completa al conductor.
-
-Prueba el motor (incluye el ejemplo de la especificación):
+Uso la misma función para la estimación del pasajero y para cerrar el viaje, así no hay dos
+tarifas distintas. Cada viaje guarda el `commissionRate` con el que se calculó, y la propina va
+completa al conductor. Para probar solo el motor (incluye el ejemplo de la especificación):
 
 ```bash
 cd mobile
 npm run test:pricing
 ```
 
-## 6. Flujo actual
+## 6. Cómo funciona el flujo
 
-- Registro e inicio de sesión con Firebase Auth.
-- **Registro de conductor en tres pestañas** (Datos personales, Vehículo, Documentos) con
-  validaciones por campo: nombre y apellido (máximo 50 caracteres), correo, contraseña,
-  documento, edad entre 18 y 80 años, celular, género, idioma, dirección, placa, año del
-  vehículo (entre 1990 y el año actual), capacidad de pasajeros (XL exige mínimo 6),
-  fecha de nacimiento y vencimientos con **calendario nativo** (o texto `DD/MM/AAAA`),
-  correo de Mercado Pago, aceptación de términos con el 20 % de comisión y vigencia de
-  licencia y SOAT. La **tecnomecánica** solo se exige a vehículos con **6 años o más**. Las
-  fotos de perfil, vehículo y documentos se comprimen y se guardan en
-  `users/{uid}/documents`; la foto de perfil se muestra en el perfil.
-- El conductor queda en estado **Pendiente** hasta que un administrador cambie
-  `approvalStatus` a `approved` en Firestore.
-- El pasajero busca un destino, ve la estimación, elige **Efectivo** o **Tarjeta (prueba)** y
-  solicita el viaje. La distancia y la duración se piden a **Google Distance Matrix** si
-  `EXPO_PUBLIC_GOOGLE_MAPS_API_KEY` está configurada; si no, se estiman localmente
-  (`trips.routeSource` indica `google` o `estimate`). La ruta del detalle se dibuja con
-  **Google Directions** (misma llave) y cae a una línea recta si falla.
-- El conductor ve las solicitudes en tiempo real (`onSnapshot`), con la duración estimada y el
-  método de pago, y puede **aceptar o rechazar**. Rechazar solo oculta el viaje para ese
-  conductor (`trips.rejectedBy`) y el viaje sigue disponible para los demás. Luego marca
-  *Voy en camino*, *Pasajero a bordo* y finaliza. Con efectivo confirma el cobro; con
-  tarjeta espera a que el pasajero complete el checkout de prueba.
-- **Disponible / No disponible**: el conductor activa el interruptor y la app empieza a
-  seguir su ubicación (`expo-location`) y a escuchar solicitudes; el estado se guarda en
-  `users/{uid}.isAvailable`.
-- Cada solicitud entrante tiene una **cuenta regresiva de 15 segundos** con barra de
-  progreso; al llegar a cero desaparece de la pantalla.
-- Al aceptar, el viaje guarda una copia del conductor y su vehículo, y el pasajero ve
-  **nombre, marca/línea, color, tipo de vehículo y placa**.
-- Estados del viaje: `requested → accepted → driver_arriving → in_progress →
-  completed → paid` (o `cancelled`).
-- **Pago con tarjeta (prueba)**: al finalizar, el pasajero toca *Pagar con tarjeta (prueba)*,
-  se abre un checkout simulado y el viaje pasa a `paid` al aprobar. El conductor ve
-  *Esperando el pago de prueba del pasajero…* mientras tanto. No se cobra dinero real.
-- **Calificación**: al aprobar el pago se abre un modal para calificar al conductor con 1 a 5
-  estrellas. También se puede calificar después desde **Historial → Detalle del viaje**. La
-  calificación se guarda en `trips.rating`, solo la puede escribir el pasajero y una sola vez;
-  el promedio aparece en el perfil del conductor.
-- Perfil con estadísticas calculadas sobre los viajes y **menú lateral (Drawer)** con inicio,
-  perfil, historial, ganancias y configuración.
-- **Perfil editable**: datos personales, foto, vehículo, documentos, correo de Mercado Pago e
-  idioma. Los cambios se guardan en `users/{uid}` y se reflejan al instante sin cerrar sesión.
-- **Ganancias** (conductor): totales de Hoy / Semana / Mes con ganancia neta, tarifas
-  cobradas, comisión de la plataforma, propinas y **promedio por viaje**. También muestra el
-  **saldo con la plataforma**: suma lo ganado con pagos con tarjeta y resta la comisión de
-  los viajes cobrados en efectivo (puede quedar negativo). Se calcula en el teléfono a
-  partir de los viajes pagados; no se guarda ningún total en Firestore.
-- **Historial**: todos los viajes del usuario en tiempo real, con filtros por estado
-  (todos / completados / cancelados), rol (pasajero / conductor), fecha (todo / hoy / semana /
-  mes / rango de fechas `DD/MM/AAAA`) y método de pago, paginación "Ver más" de 10 en 10 y
-  detalle completo de cada viaje.
-- **Detalle del viaje**: mapa con la ruta del recorrido (geometría de Directions si hay llave;
-  línea recta como respaldo), distancia, duración, categoría, tarifa, comisión, propina,
-  ganancia del conductor, método y estado del pago, y datos del vehículo.
+Empiezo por el registro. El conductor se registra en tres pestañas (Datos personales, Vehículo,
+Documentos) y cada campo se valida al salir: nombre y apellido de máximo 50 caracteres, correo,
+contraseña, documento, edad entre 18 y 80, celular, género, idioma, dirección, placa, año del
+vehículo entre 1990 y el actual, capacidad (XL pide mínimo 6) y correo de Mercado Pago. La
+fecha de nacimiento y los vencimientos se pueden elegir con el calendario nativo o escribir a
+mano en `DD/MM/AAAA`. La **tecnomecánica solo se pide a vehículos de 6 años o más**; en los más
+nuevos el campo ni aparece. Las fotos se comprimen y se guardan en `users/{uid}/documents`, y la
+de perfil se muestra en el perfil.
 
-Pruebas (tarifas, validaciones, cuenta regresiva, ganancias, historial, pagos, calificación y
-rutas; 81 en total):
+El conductor nuevo queda **Pendiente** y no puede ponerse disponible hasta que un administrador
+cambie `approvalStatus` a `approved` en Firestore. Eso lo hice así para que la aprobación se
+refleje en vivo, sin cerrar sesión.
+
+Del lado del pasajero: busca el destino, ve la estimación, elige **Efectivo** o **Tarjeta
+(prueba)** y solicita. La distancia y la duración las pido a **Google Distance Matrix** si hay
+llave; si no, las estimo localmente y guardo en `trips.routeSource` si vinieron de `google` o de
+`estimate`. En el detalle, la ruta se dibuja con **Google Directions** usando la misma llave, y
+si algo falla cae a una línea recta.
+
+El conductor ve las solicitudes en tiempo real con `onSnapshot`, junto con la duración y el
+método de pago, y puede aceptar o rechazar. Rechazar solo esconde el viaje para él
+(`trips.rejectedBy`); el viaje sigue disponible para los demás. Cada solicitud tiene una
+**cuenta regresiva de 15 segundos** con barra de progreso y, al llegar a cero, desaparece. Al
+aceptar, el viaje guarda una copia del conductor y su vehículo, y el pasajero ve nombre,
+marca/línea, color, tipo y placa.
+
+Los estados son `requested → accepted → driver_arriving → in_progress → completed → paid`, o
+`cancelled`. El conductor marca *Voy en camino*, *Pasajero a bordo* y finaliza. Con efectivo
+confirma el cobro; con tarjeta espera a que el pasajero apruebe el checkout de prueba. Mientras
+tanto le muestro *Esperando el pago de prueba del pasajero…*. No se mueve dinero real.
+
+Cuando se aprueba el pago se abre el modal de calificación de 1 a 5 estrellas. También se puede
+calificar después desde **Historial → Detalle del viaje**. La calificación va a `trips.rating`,
+solo la escribe el pasajero y una sola vez; el promedio se ve en el perfil del conductor.
+
+El perfil tiene estadísticas calculadas sobre los viajes y un **Drawer** con inicio, perfil,
+historial, ganancias y configuración. Todo el perfil es editable: datos personales, foto,
+vehículo, documentos, correo de Mercado Pago e idioma. Los cambios se guardan en `users/{uid}` y
+se ven al instante, sin volver a iniciar sesión.
+
+En **Ganancias** el conductor ve los totales de Hoy, Semana y Mes con ganancia neta, tarifas
+cobradas, comisión, propinas y promedio por viaje. También el **saldo con la plataforma**: sumo
+lo ganado con pagos con tarjeta y resto la comisión de los viajes en efectivo, así que puede
+quedar negativo. Ese saldo se calcula en el teléfono a partir de los viajes pagados; no guardo
+totales en Firestore.
+
+El **Historial** muestra todos los viajes del usuario en tiempo real, con filtros por estado,
+rol, fecha (incluido un rango `DD/MM/AAAA`) y método de pago. Pagina de 10 en 10 con “Ver más”.
+El detalle trae el mapa con la ruta, distancia, duración, categoría, tarifa, comisión, propina,
+ganancia, estado del pago y datos del vehículo.
+
+Para correr todas las pruebas (tarifas, validaciones, cuenta regresiva, ganancias, historial,
+pagos, calificación y rutas; 81 en total):
 
 ```bash
 cd mobile
 npm test
 ```
 
-## 7. Estado frente a la especificación
+## 7. Qué falta o quedó a medias
 
-La matriz completa está en [docs/SPEC_COMPLIANCE.md](docs/SPEC_COMPLIANCE.md). Resumen:
+La matriz completa está en [docs/SPEC_COMPLIANCE.md](docs/SPEC_COMPLIANCE.md). En corto:
 
-- **Completo:** registro con validaciones (tecnomecánica condicional por año, selector nativo
-  de fecha), disponibilidad y GPS, solicitudes con 15 s y rechazo persistente, máquina de
-  estados, tarifa/comisión/propina, distancia y duración con Google Distance Matrix y ruta con
-  Directions (opcionales, con respaldo local), pago de prueba y efectivo, calificación,
-  ganancias, historial con filtros, detalle con mapa, perfil editable con Drawer de navegación,
-  reglas de seguridad.
-- **Parcial:** sin navegación giro a giro, fotos en base64 (sin Cloudinary), pago real
-  implementado pero sin desplegar.
-- **Pendiente:** notificaciones push (FCM), bitácora en PDF y video de 5 minutos.
+- **Terminado:** registro con validaciones (tecnomecánica condicional y calendario nativo),
+  disponibilidad y GPS, solicitudes con 15 s y rechazo persistente, máquina de estados,
+  tarifa/comisión/propina, distancia y duración con Distance Matrix y ruta con Directions
+  (opcionales, con respaldo local), pago de prueba y efectivo, calificación, ganancias,
+  historial con filtros, detalle con mapa, perfil editable con Drawer y reglas de seguridad.
+- **A medias:** no hay navegación giro a giro, las fotos van en base64 porque el plan Spark no
+  incluye Storage, y el pago real está implementado pero sin desplegar.
+- **Pendiente:** notificaciones push (FCM pide development build), la bitácora en PDF y el video
+  de 5 minutos.
 
 ## 8. Uso de IA
 
-La bitácora completa está en [docs/AI_LOG.md](docs/AI_LOG.md). Cada bloque asistido está
-marcado en el código con `// AI-assisted: see docs/AI_LOG.md #N`.
+Usé un asistente de IA como apoyo para escribir y revisar partes del código, la documentación y
+las pruebas. No lo escondo: todo quedó registrado en [docs/AI_LOG.md](docs/AI_LOG.md), con el
+prompt, lo que acepté, lo que descarté y cómo lo verifiqué.
+
+En el código, los bloques que salieron de esas sesiones están marcados con
+`// AI-assisted: see docs/AI_LOG.md #N`, donde `N` es la entrada de la bitácora. Las decisiones
+de producto y la verificación final son mías; la IA fue una herramienta, no quien entregó el
+proyecto.
