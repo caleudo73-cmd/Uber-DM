@@ -1,8 +1,9 @@
-// AI-assisted: see docs/AI_LOG.md #11
+// AI-assisted: see docs/AI_LOG.md #11, #13
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import theme from '../config/theme';
 import { REQUIRED_DOCUMENTS } from '../config/driverRegistration';
 import Button from '../components/Button';
+import DateField, { tomorrowDate } from '../components/DateField';
 import ErrorText from '../components/ErrorText';
 import Input from '../components/Input';
 import PhotoPicker from '../components/PhotoPicker';
@@ -149,15 +150,13 @@ export default function EditDocumentsScreen({ navigation }) {
                 autoCapitalize="characters"
                 error={form.errors[fields.number]}
               />
-              <Input
+              <DateField
                 label={document.expiryLabel}
                 value={form.values[fields.expiry]}
                 onChangeText={(text) => form.setField(fields.expiry, text)}
-                keyboardType="number-pad"
-                placeholder="DD/MM/AAAA"
-                maxLength={10}
                 hint="Debe ser posterior a hoy"
                 error={form.errors[fields.expiry]}
+                minimumDate={tomorrowDate()}
               />
               <PhotoPicker
                 label="Foto del documento"

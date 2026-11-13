@@ -1,4 +1,4 @@
-// AI-assisted: see docs/AI_LOG.md #8
+// AI-assisted: see docs/AI_LOG.md #8, #13
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import theme from '../config/theme';
@@ -14,6 +14,7 @@ import {
 } from '../config/driverRegistration';
 import Button from './Button';
 import Choice, { LabeledChoice } from './Choice';
+import DateField, { tomorrowDate, yearsAgoDate } from './DateField';
 import ErrorText from './ErrorText';
 import Input from './Input';
 import PhotoPicker from './PhotoPicker';
@@ -90,15 +91,14 @@ function PersonalStep({ form }) {
         maxLength={10}
         error={errors.documentNumber}
       />
-      <Input
+      <DateField
         label="Fecha de nacimiento"
         value={values.birthDate}
         onChangeText={(text) => setField('birthDate', text)}
-        keyboardType="number-pad"
-        placeholder="DD/MM/AAAA"
-        maxLength={10}
         hint="Debes tener entre 18 y 80 años"
         error={errors.birthDate}
+        minimumDate={yearsAgoDate(80)}
+        maximumDate={yearsAgoDate(18)}
       />
       <Input
         label="Celular"
@@ -243,14 +243,13 @@ function DocumentsStep({ form }) {
               autoCapitalize="characters"
               error={errors[fields.number]}
             />
-            <Input
+            <DateField
               label={document.expiryLabel}
               value={values[fields.expiry]}
               onChangeText={(text) => setField(fields.expiry, text)}
-              keyboardType="number-pad"
-              placeholder="DD/MM/AAAA"
-              maxLength={10}
+              hint="Debe ser posterior a hoy"
               error={errors[fields.expiry]}
+              minimumDate={tomorrowDate()}
             />
             <PhotoPicker
               label="Foto del documento"

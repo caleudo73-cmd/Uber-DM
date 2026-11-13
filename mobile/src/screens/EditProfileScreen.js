@@ -1,9 +1,10 @@
-// AI-assisted: see docs/AI_LOG.md #11
+// AI-assisted: see docs/AI_LOG.md #11, #13
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import theme from '../config/theme';
 import { DOCUMENT_TYPES, GENDER_OPTIONS, LANGUAGE_OPTIONS } from '../config/driverRegistration';
 import Button from '../components/Button';
 import Choice, { LabeledChoice } from '../components/Choice';
+import DateField, { yearsAgoDate } from '../components/DateField';
 import ErrorText from '../components/ErrorText';
 import Input from '../components/Input';
 import PhotoPicker from '../components/PhotoPicker';
@@ -139,15 +140,14 @@ export default function EditProfileScreen({ navigation }) {
           maxLength={10}
           error={form.errors.documentNumber}
         />
-        <Input
+        <DateField
           label="Fecha de nacimiento"
           value={form.values.birthDate}
           onChangeText={(text) => form.setField('birthDate', text)}
-          keyboardType="number-pad"
-          placeholder="DD/MM/AAAA"
-          maxLength={10}
           hint="Debes tener entre 18 y 80 años"
           error={form.errors.birthDate}
+          minimumDate={yearsAgoDate(80)}
+          maximumDate={yearsAgoDate(18)}
         />
 
         <LabeledChoice label="Género" error={form.errors.gender}>

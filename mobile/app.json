@@ -14,7 +14,8 @@
           "cameraPermission": "La app usa la cámara para fotografiar los documentos del vehículo."
         }
       ],
-      "expo-web-browser"
+      "expo-web-browser",
+      "@react-native-community/datetimepicker"
     ]
   }
 }
