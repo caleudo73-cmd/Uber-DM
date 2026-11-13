@@ -259,3 +259,42 @@ Reglas:
   rechaza un valor mayor a 5 y el pasajero sí califica un viaje terminado.
 - **Aprendizaje:** (completar) Qué entendí de validar la calificación también en las reglas
   del servidor y qué haría distinto.
+
+---
+
+### Entrada #8 - Fecha: 2026-11-12 - Integrante: (completar) - Herramienta: Asistente de código (Big Pickle / OpenCode)
+
+- **Objetivo:** Completar el registro del conductor con los campos que exige la
+  especificación: foto de perfil, género, idioma, capacidad de pasajeros, foto del vehículo,
+  correo de Mercado Pago y aceptación de términos con la comisión visible.
+- **Prompt:** «listo, que falta del documento?» y luego «Completar el registro».
+- **Resumen de la respuesta:** Se agregó al paso de datos personales la **foto de perfil**
+  (obligatoria), un selector de **género** y otro de **idioma** (español / inglés). En el paso
+  del vehículo se agregó la **capacidad de pasajeros** (entero; la categoría XL exige mínimo
+  6) y la **foto del vehículo** donde se vea la placa. En documentos se agregó el **correo de
+  Mercado Pago** con validación de formato y un **checkbox de términos** que muestra el 20 %
+  de comisión. El nombre ahora se limita a 50 caracteres y el año del vehículo ya no acepta el
+  año siguiente. Las fotos se siguen comprimiendo y guardando en `users/{uid}/documents`; la
+  foto de perfil se lee desde ahí y se muestra en la pantalla de perfil.
+- **Qué se usó / modificó / descartó:** Se reutilizó el componente `PhotoPicker` para las
+  cuatro fotos nuevas (perfil, vehículo, licencia, SOAT y tecnomecánica) y el selector
+  `Choice` para género, idioma y categoría. Se descartó agregar una dependencia de selector
+  nativo: los chips existentes ya cumplen la función de lista desplegable y funcionan igual en
+  iOS y Android. Se descartó guardar la foto de perfil en el documento principal para no
+  cargar la imagen en cada lectura del perfil; va en la subcolección `documents`. Las reglas
+  de Firestore ahora exigen el registro completo del conductor (términos, idioma, género,
+  correo y capacidad) y rechazan XL con menos de 6 pasajeros.
+- **Archivos y commit:** `mobile/src/utils/validators.js`,
+  `mobile/src/config/driverRegistration.js`, `mobile/src/hooks/useDriverRegisterForm.js`,
+  `mobile/src/components/DriverRegisterForm.js`, `mobile/src/services/authService.js`,
+  `mobile/src/hooks/useProfilePhoto.js` (nuevo), `mobile/src/screens/ProfileScreen.js`,
+  `mobile/scripts/validators.test.mjs`, `firebase/firestore.rules`, `README.md` —
+  commit: `9920c70`.
+- **Verificación:** `cd mobile && npm test` → 8/8 tarifas, 14/14 validaciones, 6/6 cuenta
+  regresiva, 9/9 ganancias/historial, 11/11 pagos y 6/6 calificación (54 en total). Bundle de
+  Android exportado sin errores. Reglas desplegadas y verificadas contra Firestore real 4/4:
+  se rechaza un conductor sin aceptar términos, se rechaza XL con capacidad 5, se acepta el
+  registro completo con XL y capacidad 6, y se acepta el registro de un pasajero. El usuario
+  y los documentos temporales de la prueba se eliminaron.
+- **Aprendizaje:** (completar) Qué entendí de validar los campos nuevos tanto en el formulario
+  como en las reglas, y qué haría distinto.
