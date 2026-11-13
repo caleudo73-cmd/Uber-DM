@@ -375,7 +375,7 @@ Reglas:
   `mobile/src/config/driverRegistration.js`, `mobile/src/hooks/useDriverRegisterForm.js`,
   `mobile/src/utils/validators.js`, `mobile/scripts/validators.test.mjs`, `README.md`,
   `docs/SPEC_COMPLIANCE.md`, `docs/ARCHITECTURE.md`, `docs/TESTING.md`,
-  `docs/DELIVERY.md` — commit: (completar tras el commit).
+  `docs/DELIVERY.md` — commit: `1ed2e3a`.
 - **Verificación:** `cd mobile && npm test` → 8/8 tarifas, 15/15 validaciones, 6/6 cuenta
   regresiva, 16/16 ganancias/historial, 11/11 pagos y 6/6 calificación (**62 en total**).
   Bundle de Android exportado sin errores. Reglas de Firestore compiladas y desplegadas; la
