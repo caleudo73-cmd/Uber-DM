@@ -1,15 +1,24 @@
+// AI-assisted: see docs/AI_LOG.md #9
 // Pruebas de ganancias por período y filtros del historial.
 // Se ejecutan con: npm test
 
 import assert from 'node:assert/strict';
-import { RIDE_STATUS } from '../src/config/constants.js';
+import { PAYMENT_METHOD, RIDE_STATUS } from '../src/config/constants.js';
 import {
   EARNINGS_PERIODS,
   periodStart,
   sortByDateDesc,
+  summarizeBalance,
   summarizeEarnings,
 } from '../src/utils/earnings.js';
-import { filterRides, matchesRoleFilter, matchesStatusFilter, roleInRide } from '../src/utils/history.js';
+import {
+  filterRides,
+  matchesPaymentFilter,
+  matchesPeriodFilter,
+  matchesRoleFilter,
+  matchesStatusFilter,
+  roleInRide,
+} from '../src/utils/history.js';
 
 const tests = [];
 const test = (name, fn) => tests.push({ name, fn });
@@ -58,13 +67,72 @@ test('El mes empieza el día 1', () => {
   assert.equal(start.getMonth(), 10);
 });
 
-test('Suma bruto, comisión, propinas y neto', () => {
+test('Suma bruto, comisión, propinas, neto y promedio', () => {
   const rides = [
     ride({ id: 'a', fare: 13000, commission: 2600, tip: 1000, driverEarnings: 11400 }),
     ride({ id: 'b', fare: 20000, commission: 4000, tip: 0, driverEarnings: 16000 }),
   ];
   const totals = summarizeEarnings(rides, EARNINGS_PERIODS.TODAY, NOW);
-  assert.deepEqual(totals, { trips: 2, gross: 33000, commission: 6600, tips: 1000, net: 27400 });
+  assert.deepEqual(totals, {
+    trips: 2,
+    gross: 33000,
+    commission: 6600,
+    tips: 1000,
+    net: 27400,
+    average: 13700,
+  });
+});
+
+test('Sin viajes el promedio es cero', () => {
+  const totals = summarizeEarnings([], EARNINGS_PERIODS.TODAY, NOW);
+  assert.equal(totals.trips, 0);
+  assert.equal(totals.average, 0);
+});
+
+test('Saldo: suma los pagos con tarjeta y resta la comisión del efectivo', () => {
+  const rides = [
+    ride({
+      id: 'card',
+      status: RIDE_STATUS.PAID,
+      paymentMethod: PAYMENT_METHOD.MERCADO_PAGO_TEST,
+      driverEarnings: 16000,
+      commission: 4000,
+    }),
+    ride({
+      id: 'cash',
+      status: RIDE_STATUS.PAID,
+      paymentMethod: PAYMENT_METHOD.CASH,
+      driverEarnings: 16000,
+      commission: 4000,
+    }),
+    ride({
+      id: 'unpaid',
+      status: RIDE_STATUS.COMPLETED,
+      paymentMethod: PAYMENT_METHOD.CASH,
+      driverEarnings: 9000,
+      commission: 1000,
+    }),
+  ];
+
+  const balance = summarizeBalance(rides);
+  assert.deepEqual(balance, {
+    balance: 12000,
+    cardEarnings: 16000,
+    cashCommission: 4000,
+    trips: 2,
+  });
+});
+
+test('Saldo: puede quedar negativo si todo se cobró en efectivo', () => {
+  const rides = [
+    ride({
+      id: 'cash',
+      status: RIDE_STATUS.PAID,
+      paymentMethod: PAYMENT_METHOD.CASH,
+      commission: 3000,
+    }),
+  ];
+  assert.equal(summarizeBalance(rides).balance, -3000);
 });
 
 test('Ignora viajes cancelados o sin pagar', () => {
@@ -120,6 +188,78 @@ test('filterRides combina estado y rol', () => {
   ];
   const result = filterRides(rides, { status: 'completed', role: 'driver' }, 'd1');
   assert.deepEqual(result.map((item) => item.id), ['a', 'c']);
+});
+
+test('Filtro por período del historial', () => {
+  const today = ride({ id: 'today', completedAt: at(0) });
+  const yesterday = ride({ id: 'yesterday', completedAt: at(1) });
+  const old = ride({ id: 'old', completedAt: at(40) });
+
+  assert.equal(matchesPeriodFilter(today, 'today', { now: NOW }), true);
+  assert.equal(matchesPeriodFilter(yesterday, 'today', { now: NOW }), false);
+  assert.equal(matchesPeriodFilter(yesterday, 'week', { now: NOW }), true);
+  assert.equal(matchesPeriodFilter(old, 'week', { now: NOW }), false);
+  assert.equal(matchesPeriodFilter(old, 'month', { now: NOW }), false);
+  assert.equal(matchesPeriodFilter(old, 'all', { now: NOW }), true);
+});
+
+test('Rango de fechas inclusivo', () => {
+  const from = new Date(2026, 10, 9);
+  const to = new Date(2026, 10, 10);
+
+  assert.equal(matchesPeriodFilter(ride({ completedAt: at(2) }), 'range', { from, to }), true);
+  assert.equal(matchesPeriodFilter(ride({ completedAt: at(1) }), 'range', { from, to }), true);
+  assert.equal(matchesPeriodFilter(ride({ completedAt: at(0) }), 'range', { from, to }), false);
+  assert.equal(matchesPeriodFilter(ride({ completedAt: at(5) }), 'range', { from, to }), false);
+  assert.equal(matchesPeriodFilter(ride({ completedAt: at(1) }), 'range', { from: null, to }), true);
+});
+
+test('Filtro por método de pago', () => {
+  assert.equal(matchesPaymentFilter(ride({ paymentMethod: PAYMENT_METHOD.CASH }), 'cash'), true);
+  assert.equal(
+    matchesPaymentFilter(ride({ paymentMethod: PAYMENT_METHOD.CASH }), PAYMENT_METHOD.STRIPE),
+    false
+  );
+  assert.equal(matchesPaymentFilter(ride({ paymentMethod: PAYMENT_METHOD.STRIPE }), 'all'), true);
+  assert.equal(matchesPaymentFilter(ride({}), 'all'), true);
+});
+
+test('filterRides combina período, método y rol', () => {
+  const rides = [
+    ride({
+      id: 'card-today',
+      completedAt: at(0),
+      paymentMethod: PAYMENT_METHOD.MERCADO_PAGO_TEST,
+      driverId: 'd1',
+      passengerId: 'p1',
+    }),
+    ride({
+      id: 'cash-today',
+      completedAt: at(0),
+      paymentMethod: PAYMENT_METHOD.CASH,
+      driverId: 'd1',
+      passengerId: 'p1',
+    }),
+    ride({
+      id: 'card-old',
+      completedAt: at(10),
+      paymentMethod: PAYMENT_METHOD.MERCADO_PAGO_TEST,
+      driverId: 'd1',
+      passengerId: 'p1',
+    }),
+  ];
+
+  const result = filterRides(
+    rides,
+    {
+      period: 'today',
+      paymentMethod: PAYMENT_METHOD.MERCADO_PAGO_TEST,
+      role: 'driver',
+      now: NOW,
+    },
+    'd1'
+  );
+  assert.deepEqual(result.map((item) => item.id), ['card-today']);
 });
 
 let failed = 0;

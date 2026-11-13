@@ -1,3 +1,4 @@
+// AI-assisted: see docs/AI_LOG.md #9
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import * as rideService from '../services/rideService';
 import { isExpired } from '../utils/countdown';
@@ -24,7 +25,11 @@ export default function useDriverRides({ isAvailable = true } = {}) {
       setAvailable([]);
       return undefined;
     }
-    return rideService.subscribeAvailableRides(setAvailable, setSubscriptionError);
+    return rideService.subscribeAvailableRides(
+      user.id,
+      setAvailable,
+      setSubscriptionError
+    );
   }, [user?.id, busy, isAvailable]);
 
   // La solicitud desaparece cuando se acaba su cuenta regresiva.
@@ -46,6 +51,7 @@ export default function useDriverRides({ isAvailable = true } = {}) {
   );
 
   const accept = useAsyncAction(rideService.acceptRide);
+  const reject = useAsyncAction(rideService.rejectRide);
   const arriving = useAsyncAction(rideService.markDriverArriving);
   const start = useAsyncAction(rideService.startRide);
   const complete = useAsyncAction(rideService.completeRide);
@@ -53,6 +59,15 @@ export default function useDriverRides({ isAvailable = true } = {}) {
   const cashPaid = useAsyncAction(rideService.markCashPaid);
 
   const acceptRide = useCallback((id) => accept.run(id), [accept.run]);
+  const rejectRide = useCallback(
+    async (id) => {
+      const result = await reject.run(id);
+      // Si se guardó el rechazo, desaparece de la lista de inmediato.
+      if (result) dismiss(id);
+      return result;
+    },
+    [reject.run, dismiss]
+  );
   const markArriving = useCallback((id) => arriving.run(id), [arriving.run]);
   const startRide = useCallback((id) => start.run(id), [start.run]);
   const completeRide = useCallback((id) => complete.run(id), [complete.run]);
@@ -64,6 +79,7 @@ export default function useDriverRides({ isAvailable = true } = {}) {
     available: visibleRides,
     dismiss,
     accept: acceptRide,
+    reject: rejectRide,
     arriving: markArriving,
     start: startRide,
     complete: completeRide,
@@ -71,6 +87,7 @@ export default function useDriverRides({ isAvailable = true } = {}) {
     cashPaid: markCashPaid,
     loading:
       accept.loading ||
+      reject.loading ||
       arriving.loading ||
       start.loading ||
       complete.loading ||
@@ -78,6 +95,7 @@ export default function useDriverRides({ isAvailable = true } = {}) {
       cashPaid.loading,
     error:
       accept.error ||
+      reject.error ||
       arriving.error ||
       start.error ||
       complete.error ||

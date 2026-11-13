@@ -1,3 +1,4 @@
+// AI-assisted: see docs/AI_LOG.md #9
 import {
   addDoc,
   collection,
@@ -93,6 +94,7 @@ export const requestRide = async (origin, destination, options = {}) => {
     paymentId: null,
     status: RIDE_STATUS.REQUESTED,
     rating: null,
+    rejectedBy: [],
     createdAt: serverTimestamp(),
     acceptedAt: null,
     completedAt: null,
@@ -121,12 +123,18 @@ export const subscribeCurrentRide = (userId, onChange, onError) => {
   );
 };
 
-export const subscribeAvailableRides = (onChange, onError) => {
+// Las solicitudes que este conductor rechazó no vuelven a aparecerle.
+export const subscribeAvailableRides = (driverId, onChange, onError) => {
   const q = query(collection(db, TRIPS), where('status', '==', RIDE_STATUS.REQUESTED), limit(20));
 
   return onSnapshot(
     q,
-    (snapshot) => onChange(snapshot.docs.map(toRide)),
+    (snapshot) =>
+      onChange(
+        snapshot.docs
+          .map(toRide)
+          .filter((ride) => !(ride.rejectedBy ?? []).includes(driverId))
+      ),
     (error) => onError?.(error.message)
   );
 };
@@ -194,6 +202,32 @@ export const acceptRide = async (rideId) => {
       status: RIDE_STATUS.ACCEPTED,
       acceptedAt: serverTimestamp(),
     });
+  });
+
+  return { id: rideId };
+};
+
+// Rechazar no cancela el viaje: solo lo oculta para este conductor y sigue
+// disponible para los demás. Se guarda en `rejectedBy` para que no reaparezca.
+export const rejectRide = async (rideId) => {
+  const { auth, db } = requireFirebase();
+  const user = auth.currentUser;
+  if (!user) throw new Error('Debes iniciar sesión');
+
+  const ref = doc(db, TRIPS, rideId);
+  await runTransaction(db, async (transaction) => {
+    const snapshot = await transaction.get(ref);
+    if (!snapshot.exists()) throw new Error('Ese viaje ya no existe');
+
+    const trip = snapshot.data();
+    if (trip.status !== RIDE_STATUS.REQUESTED) {
+      throw new Error('Ese viaje ya no está disponible');
+    }
+
+    const rejectedBy = Array.isArray(trip.rejectedBy) ? trip.rejectedBy : [];
+    if (rejectedBy.includes(user.uid)) return;
+
+    transaction.update(ref, { rejectedBy: [...rejectedBy, user.uid] });
   });
 
   return { id: rideId };

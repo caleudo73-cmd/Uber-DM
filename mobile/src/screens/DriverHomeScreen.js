@@ -1,3 +1,4 @@
+// AI-assisted: see docs/AI_LOG.md #9
 import { ActivityIndicator, FlatList, StyleSheet, Text, View } from 'react-native';
 import theme from '../config/theme';
 import {
@@ -165,6 +166,7 @@ function AvailableRides({ rides, driver, isAvailable }) {
           <RideRequestCard
             ride={item}
             onAccept={driver.accept}
+            onReject={driver.reject}
             onExpire={driver.dismiss}
             loading={driver.loading}
           />

@@ -1,3 +1,4 @@
+// AI-assisted: see docs/AI_LOG.md #9
 import { useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import theme from '../config/theme';
@@ -13,6 +14,7 @@ import * as rideService from '../services/rideService';
 import Button from '../components/Button';
 import ErrorText from '../components/ErrorText';
 import RatingInput from '../components/RatingInput';
+import RideMap from '../components/RideMap';
 import ScreenContainer from '../components/ScreenContainer';
 import StarRating from '../components/StarRating';
 import useAuth from '../hooks/useAuth';
@@ -69,6 +71,11 @@ export default function RideDetailScreen({ route }) {
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={styles.status}>{RIDE_STATUS_LABEL[ride.status] ?? ride.status}</Text>
         <Text style={styles.date}>{formatDateTime(ride.completedAt ?? ride.createdAt)}</Text>
+
+        <View style={styles.map}>
+          <RideMap origin={ride.origin} destination={ride.destination} showRoute />
+        </View>
+        <Text style={styles.mapNote}>Ruta aproximada en línea recta.</Text>
 
         <Section title="Recorrido">
           <Line label="Origen" value={ride.origin?.name ?? '—'} />
@@ -162,7 +169,18 @@ export default function RideDetailScreen({ route }) {
 const styles = StyleSheet.create({
   content: { padding: spacing.lg },
   status: { fontSize: fontSize.lg, fontWeight: fontWeight.bold, color: colors.textPrimary },
-  date: { color: colors.textSecondary, fontSize: fontSize.sm, marginBottom: spacing.lg },
+  date: { color: colors.textSecondary, fontSize: fontSize.sm, marginBottom: spacing.md },
+  map: {
+    height: 190,
+    borderRadius: radius.md,
+    overflow: 'hidden',
+    marginBottom: spacing.xs,
+  },
+  mapNote: {
+    color: colors.textSecondary,
+    fontSize: fontSize.sm,
+    marginBottom: spacing.lg,
+  },
   section: {
     backgroundColor: colors.surface,
     borderRadius: radius.md,

@@ -178,7 +178,9 @@ npm run test:pricing
   `approvalStatus` a `approved` en Firestore.
 - El pasajero busca un destino, ve la estimación, elige **Efectivo** o **Tarjeta (prueba)** y
   solicita el viaje.
-- El conductor ve las solicitudes en tiempo real (`onSnapshot`), acepta, marca
+- El conductor ve las solicitudes en tiempo real (`onSnapshot`), con la duración estimada y el
+  método de pago, y puede **aceptar o rechazar**. Rechazar solo oculta el viaje para ese
+  conductor (`trips.rejectedBy`) y el viaje sigue disponible para los demás. Luego marca
   *Voy en camino*, *Pasajero a bordo* y finaliza. Con efectivo confirma el cobro; con
   tarjeta espera a que el pasajero complete el checkout de prueba.
 - **Disponible / No disponible**: el conductor activa el interruptor y la app empieza a
@@ -199,18 +201,22 @@ npm run test:pricing
   el promedio aparece en el perfil del conductor.
 - Perfil con estadísticas calculadas sobre los viajes.
 - **Ganancias** (conductor): totales de Hoy / Semana / Mes con ganancia neta, tarifas
-  cobradas, comisión de la plataforma y propinas. Se calcula en el teléfono a partir de los
-  viajes finalizados o pagados; no se guarda ningún total en Firestore.
+  cobradas, comisión de la plataforma, propinas y **promedio por viaje**. También muestra el
+  **saldo con la plataforma**: suma lo ganado con pagos con tarjeta y resta la comisión de
+  los viajes cobrados en efectivo (puede quedar negativo). Se calcula en el teléfono a
+  partir de los viajes pagados; no se guarda ningún total en Firestore.
 - **Historial**: todos los viajes del usuario en tiempo real, con filtros por estado
-  (todos / completados / cancelados) y por rol (pasajero / conductor), paginación
-  "Ver más" de 10 en 10 y detalle completo de cada viaje.
-- **Detalle del viaje**: recorrido, distancia, duración, categoría, tarifa, comisión,
-  propina, ganancia del conductor, método y estado del pago, y datos del vehículo.
+  (todos / completados / cancelados), rol (pasajero / conductor), fecha (todo / hoy / semana /
+  mes / rango de fechas `DD/MM/AAAA`) y método de pago, paginación "Ver más" de 10 en 10 y
+  detalle completo de cada viaje.
+- **Detalle del viaje**: mapa con la ruta aproximada en línea recta, recorrido, distancia,
+  duración, categoría, tarifa, comisión, propina, ganancia del conductor, método y estado del
+  pago, y datos del vehículo.
 
 Pendiente de la especificación completa: notificaciones push.
 
 Pruebas (tarifas, validaciones, cuenta regresiva, ganancias, historial, pagos y calificación;
-54 en total):
+61 en total):
 
 ```bash
 cd mobile

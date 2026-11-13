@@ -1,4 +1,4 @@
-// AI-assisted: see docs/AI_LOG.md #8
+// AI-assisted: see docs/AI_LOG.md #8, #9
 rules_version = '2';
 
 service cloud.firestore {
@@ -66,11 +66,42 @@ service cloud.firestore {
             resource.data.status == 'requested'
             && request.resource.data.driverId == request.auth.uid
           )
+          // Rechazar: el conductor se agrega a rejectedBy y el viaje sigue
+          // disponible para los demás.
+          || (
+            resource.data.status == 'requested'
+            && resource.data.passengerId != request.auth.uid
+            && request.resource.data.status == 'requested'
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['rejectedBy'])
+            && request.auth.uid in request.resource.data.rejectedBy
+          )
         )
         // El método de pago se elige al pedir el viaje y ya no cambia.
         && (
           request.resource.data.paymentMethod == resource.data.paymentMethod
           || resource.data.status == 'requested'
+        )
+        // Los datos del recorrido y de la cotización quedan congelados al crear
+        // el viaje: ni el pasajero ni el conductor pueden alterarlos después.
+        && request.resource.data.passengerId == resource.data.passengerId
+        && request.resource.data.origin == resource.data.origin
+        && request.resource.data.destination == resource.data.destination
+        && request.resource.data.distanceKm == resource.data.distanceKm
+        && request.resource.data.durationMin == resource.data.durationMin
+        && request.resource.data.category == resource.data.category
+        && request.resource.data.tip == resource.data.tip
+        && request.resource.data.currency == resource.data.currency
+        && request.resource.data.commissionRate == resource.data.commissionRate
+        // La tarifa solo se recalcula al finalizar el viaje, y solo por el
+        // conductor asignado.
+        && (
+          !request.resource.data.diff(resource.data).affectedKeys()
+            .hasAny(['fare', 'commission', 'driverEarnings'])
+          || (
+            resource.data.driverId == request.auth.uid
+            && resource.data.status == 'in_progress'
+            && request.resource.data.status == 'completed'
+          )
         )
         // Los campos de pago con tarjeta real solo los escribe el webhook (Admin
         // SDK). En efectivo el conductor confirma el cobro desde la app y en el

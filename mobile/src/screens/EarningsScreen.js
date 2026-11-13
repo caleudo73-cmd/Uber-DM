@@ -1,11 +1,13 @@
+// AI-assisted: see docs/AI_LOG.md #9
 import { useMemo, useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import theme from '../config/theme';
 import { PRICING } from '../config/pricing';
 import { formatPrice } from '../utils/format';
 import {
   EARNINGS_PERIODS,
   EARNINGS_PERIOD_LABEL,
+  summarizeBalance,
   summarizeEarnings,
 } from '../utils/earnings';
 import ErrorText from '../components/ErrorText';
@@ -39,6 +41,7 @@ export default function EarningsScreen() {
   const [period, setPeriod] = useState(EARNINGS_PERIODS.TODAY);
 
   const totals = useMemo(() => summarizeEarnings(rides, period), [rides, period]);
+  const balance = useMemo(() => summarizeBalance(rides), [rides]);
 
   if (loading) {
     return (
@@ -50,7 +53,8 @@ export default function EarningsScreen() {
 
   return (
     <ScreenContainer>
-      <View style={styles.periods}>
+      <ScrollView showsVerticalScrollIndicator={false}>
+        <View style={styles.periods}>
         {PERIODS.map((value) => {
           const active = value === period;
           return (
@@ -91,18 +95,36 @@ export default function EarningsScreen() {
         <Line label="Tarifas cobradas" value={formatPrice(totals.gross)} />
         <Line label="Comisión de la plataforma" value={`- ${formatPrice(totals.commission)}`} />
         <Line label="Propinas (100% para ti)" value={formatPrice(totals.tips)} />
+        <Line label="Promedio por viaje" value={formatPrice(totals.average)} />
         <View style={styles.divider} />
         <Line label="Total a recibir" value={formatPrice(totals.net)} strong />
       </View>
 
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>Saldo con la plataforma</Text>
+        <Text style={[styles.balanceValue, balance.balance < 0 && styles.balanceNegative]}>
+          {formatPrice(balance.balance)}
+        </Text>
+        <Line label="Ganancia de pagos con tarjeta" value={formatPrice(balance.cardEarnings)} />
+        <Line
+          label="Comisión de viajes en efectivo"
+          value={`- ${formatPrice(balance.cashCommission)}`}
+        />
+        <Text style={styles.note}>
+          Los pagos con tarjeta los recibe la plataforma y luego te los paga. En efectivo tú
+          recibes el dinero, por eso la comisión queda como deuda. El saldo puede ser negativo.
+        </Text>
+      </View>
+
       <Text style={styles.note}>
         Solo se cuentan los viajes finalizados y pagados. La comisión se guarda por viaje al
-        momento de aceptarlo.
+        crear la solicitud.
       </Text>
 
       {totals.trips === 0 ? (
         <Text style={styles.note}>Todavía no hay viajes finalizados en este período.</Text>
       ) : null}
+      </ScrollView>
     </ScreenContainer>
   );
 }
@@ -155,6 +177,13 @@ const styles = StyleSheet.create({
   lineLabel: { color: colors.textSecondary, fontSize: fontSize.sm, flex: 1 },
   lineValue: { color: colors.textPrimary, fontSize: fontSize.sm },
   lineStrong: { fontWeight: fontWeight.bold, color: colors.textPrimary, fontSize: fontSize.md },
+  balanceValue: {
+    fontSize: fontSize.xl,
+    fontWeight: fontWeight.bold,
+    color: colors.textPrimary,
+    marginBottom: spacing.sm,
+  },
+  balanceNegative: { color: colors.danger },
   divider: { height: 1, backgroundColor: colors.border, marginVertical: spacing.sm },
   note: { color: colors.textSecondary, fontSize: fontSize.sm, lineHeight: 20, marginBottom: spacing.sm },
 });
