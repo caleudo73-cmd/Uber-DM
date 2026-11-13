@@ -19,6 +19,7 @@ import {
   isValidSoatNumber,
   isValidTechnomechanicalNumber,
   isValidVehicleYear,
+  isValidVehicleText,
   normalizePlate,
   onlyDigits,
   toISODate,
@@ -114,11 +115,13 @@ const fieldValidators = {
   city: (value) => (required(value) ? null : 'Escribe tu ciudad'),
   address: (value) =>
     String(value).trim().length >= 5 ? null : 'Escribe tu dirección (mínimo 5 caracteres)',
-  vehicleBrand: (value) => (required(value) ? null : 'Escribe la marca'),
-  vehicleLine: (value) => (required(value) ? null : 'Escribe la línea o modelo'),
+  vehicleBrand: (value) =>
+    isValidVehicleText(value) ? null : 'Máximo 30 caracteres',
+  vehicleLine: (value) =>
+    isValidVehicleText(value) ? null : 'Máximo 30 caracteres',
   vehicleYear: (value) => (isValidVehicleYear(value) ? null : 'Año entre 1990 y el año actual'),
   vehiclePlate: (value) => (isValidPlate(value) ? null : 'Placa inválida (ej. ABC123)'),
-  vehicleColor: (value) => (required(value) ? null : 'Escribe el color'),
+  vehicleColor: (value) => (required(value) ? null : 'Selecciona el color'),
   vehicleCapacity: (value, values) => {
     if (isValidPassengerCapacity(value, values.vehicleCategory)) return null;
     return values.vehicleCategory === CATEGORIES.XL
@@ -158,6 +161,7 @@ export default function useDriverRegisterForm() {
     if (name === 'vehicleYear') value = onlyDigits(rawValue).slice(0, 4);
     if (name === 'vehicleCapacity') value = onlyDigits(rawValue).slice(0, 2);
     if (name === 'vehiclePlate') value = normalizePlate(rawValue).slice(0, 6);
+    if (name === 'vehicleBrand' || name === 'vehicleLine') value = rawValue.slice(0, 30);
     if (name.endsWith('ExpiresAt') || name === 'birthDate') value = formatDateInput(rawValue);
 
     setValues((current) => ({ ...current, [name]: value }));

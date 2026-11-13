@@ -11,6 +11,8 @@ export const MAX_AGE = 80;
 export const MIN_VEHICLE_YEAR = 1990;
 export const MAX_NAME_LENGTH = 50;
 export const MIN_XL_CAPACITY = 6;
+// La especificación limita la marca y el modelo del vehículo a 30 caracteres.
+export const MAX_VEHICLE_TEXT_LENGTH = 30;
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[A-Za-z]{2,}$/;
 const NAME_RE = /^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ' .-]+$/;
@@ -61,6 +63,12 @@ export const isValidPassengerCapacity = (value, category = CATEGORIES.ECONOMY) =
   if (!Number.isInteger(capacity) || capacity < 1) return false;
   if (category === CATEGORIES.XL) return capacity >= MIN_XL_CAPACITY;
   return true;
+};
+
+// Marca y modelo: texto obligatorio de 1 a 30 caracteres.
+export const isValidVehicleText = (value) => {
+  const text = String(value ?? '').trim();
+  return text.length > 0 && text.length <= MAX_VEHICLE_TEXT_LENGTH;
 };
 
 // La aceptación de términos es un checkbox: solo vale true.
@@ -119,11 +127,12 @@ export const isValidBirthDate = (value, now = new Date()) => {
   return age >= MIN_AGE && age <= MAX_AGE;
 };
 
-// Documentos vigentes: la fecha de vencimiento debe ser hoy o posterior.
+// Documentos vigentes: la fecha de vencimiento debe ser posterior a hoy.
+// Si vence hoy, ya no se acepta (la especificación pide "posterior a hoy").
 export const isNotExpired = (value, now = new Date()) => {
   const date = parseDateInput(value);
   if (!date) return false;
-  return date.getTime() >= startOfToday(now).getTime();
+  return date.getTime() > startOfToday(now).getTime();
 };
 
 export const toISODate = (value) => {

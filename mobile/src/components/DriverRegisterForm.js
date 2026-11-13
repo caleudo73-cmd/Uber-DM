@@ -10,6 +10,7 @@ import {
   LANGUAGE_OPTIONS,
   REQUIRED_DOCUMENTS,
   VEHICLE_CATEGORIES,
+  VEHICLE_COLORS,
 } from '../config/driverRegistration';
 import Button from './Button';
 import ErrorText from './ErrorText';
@@ -184,6 +185,7 @@ function VehicleStep({ form }) {
         value={values.vehicleBrand}
         onChangeText={(text) => setField('vehicleBrand', text)}
         autoCapitalize="words"
+        maxLength={30}
         placeholder="Ej. Renault"
         error={errors.vehicleBrand}
       />
@@ -192,6 +194,7 @@ function VehicleStep({ form }) {
         value={values.vehicleLine}
         onChangeText={(text) => setField('vehicleLine', text)}
         autoCapitalize="words"
+        maxLength={30}
         placeholder="Ej. Logan"
         error={errors.vehicleLine}
       />
@@ -214,14 +217,14 @@ function VehicleStep({ form }) {
         hint="Formato de carro: ABC123"
         error={errors.vehiclePlate}
       />
-      <Input
-        label="Color"
-        value={values.vehicleColor}
-        onChangeText={(text) => setField('vehicleColor', text)}
-        autoCapitalize="words"
-        placeholder="Ej. Blanco"
-        error={errors.vehicleColor}
-      />
+      <LabeledChoice label="Color">
+        <Choice
+          options={VEHICLE_COLORS}
+          value={values.vehicleColor}
+          onChange={(value) => setField('vehicleColor', value)}
+        />
+        {errors.vehicleColor ? <Text style={styles.fieldError}>{errors.vehicleColor}</Text> : null}
+      </LabeledChoice>
       <Input
         label="Capacidad de pasajeros"
         value={values.vehicleCapacity}

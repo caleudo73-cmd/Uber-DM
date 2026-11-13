@@ -1,15 +1,13 @@
-// AI-assisted: see docs/AI_LOG.md #9
-import { useCallback, useEffect, useMemo, useState } from 'react';
+// AI-assisted: see docs/AI_LOG.md #9, #10
+import { useCallback, useEffect, useState } from 'react';
 import * as rideService from '../services/rideService';
-import { isExpired } from '../utils/countdown';
 import useAsyncAction from './useAsyncAction';
 import useAuth from './useAuth';
+import useTripRequests from './useTripRequests';
 
 export default function useDriverRides({ isAvailable = true } = {}) {
   const { user } = useAuth();
   const [currentRide, setCurrentRide] = useState(null);
-  const [available, setAvailable] = useState([]);
-  const [dismissed, setDismissed] = useState(() => new Set());
   const [subscriptionError, setSubscriptionError] = useState(null);
 
   // Viaje activo del conductor en tiempo real.
@@ -20,35 +18,11 @@ export default function useDriverRides({ isAvailable = true } = {}) {
 
   // Solo escucha solicitudes nuevas cuando está disponible y libre.
   const busy = Boolean(currentRide);
-  useEffect(() => {
-    if (!user || busy || !isAvailable) {
-      setAvailable([]);
-      return undefined;
-    }
-    return rideService.subscribeAvailableRides(
-      user.id,
-      setAvailable,
-      setSubscriptionError
-    );
-  }, [user?.id, busy, isAvailable]);
-
-  // La solicitud desaparece cuando se acaba su cuenta regresiva.
-  const dismiss = useCallback((id) => {
-    setDismissed((current) => {
-      if (current.has(id)) return current;
-      const next = new Set(current);
-      next.add(id);
-      return next;
-    });
-  }, []);
-
-  const visibleRides = useMemo(
-    () =>
-      available.filter(
-        (ride) => !dismissed.has(ride.id) && !isExpired(ride.createdAt)
-      ),
-    [available, dismissed]
-  );
+  const tripRequests = useTripRequests({
+    driverId: user?.id,
+    enabled: Boolean(user) && !busy && isAvailable,
+  });
+  const { dismiss } = tripRequests;
 
   const accept = useAsyncAction(rideService.acceptRide);
   const reject = useAsyncAction(rideService.rejectRide);
@@ -68,6 +42,15 @@ export default function useDriverRides({ isAvailable = true } = {}) {
     },
     [reject.run, dismiss]
   );
+  // Al vencer los 15 s se guarda el rechazo para que no vuelva a aparecer.
+  // Si el viaje ya fue tomado, igual desaparece de esta pantalla.
+  const expireRide = useCallback(
+    async (id) => {
+      await rideService.rejectRide(id).catch(() => {});
+      dismiss(id);
+    },
+    [dismiss]
+  );
   const markArriving = useCallback((id) => arriving.run(id), [arriving.run]);
   const startRide = useCallback((id) => start.run(id), [start.run]);
   const completeRide = useCallback((id) => complete.run(id), [complete.run]);
@@ -76,10 +59,11 @@ export default function useDriverRides({ isAvailable = true } = {}) {
 
   return {
     currentRide,
-    available: visibleRides,
+    available: tripRequests.requests,
     dismiss,
     accept: acceptRide,
     reject: rejectRide,
+    expire: expireRide,
     arriving: markArriving,
     start: startRide,
     complete: completeRide,
@@ -101,6 +85,7 @@ export default function useDriverRides({ isAvailable = true } = {}) {
       complete.error ||
       cancel.error ||
       cashPaid.error ||
+      tripRequests.error ||
       subscriptionError,
   };
 }

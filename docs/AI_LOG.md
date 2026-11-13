@@ -343,3 +343,45 @@ Reglas:
   de la cancelación (afectar a todos), de calcular el saldo como deuda, y de congelar la
   cotización en las reglas para que el precio no se pueda manipular.
 
+---
+
+### Entrada #10 - Fecha: 2026-11-12 - Integrante: (completar) - Herramienta: Asistente de código (Big Pickle / OpenCode)
+
+- **Objetivo:** Organizar el proyecto para la entrega, comparar el estado real contra el PDF
+  de la especificación y cerrar las brechas pequeñas que no requieren rediseño.
+- **Prompt:** «primero, vamos a organizar bien bien el proyecto que quede ordenado, y
+  explicable para entregarlo, tambien veamos que le falta para poner del documento, si ya
+  tiene todo, hacer las pruebas».
+- **Resumen de la respuesta:** Se separó la lógica de las pantallas en los hooks que pide la
+  especificación: `useDriverLocation` (GPS y escritura controlada en Firestore),
+  `useTripRequests` (solicitudes, rechazos y vencimiento) y `useEarnings` (totales y saldo con
+  `useMemo`). `useDriverAvailability` y `useDriverRides` ahora componen esos hooks. El rechazo
+  automático al vencer los 15 s se guarda en `rejectedBy` para que la solicitud no reaparezca.
+  Se limitaron marca y modelo a 30 caracteres, el color pasó a ser una lista desplegable y la
+  vigencia de documentos quedó estricta (`> hoy`). El historial muestra categoría, estado de
+  pago, tarifa y neto/propina. Se agregaron `docs/SPEC_COMPLIANCE.md`,
+  `docs/ARCHITECTURE.md`, `docs/TESTING.md` y `docs/DELIVERY.md`, y se actualizó el README.
+- **Qué se usó / modificó / descartó:** Se reutilizaron las funciones puras existentes y los
+  componentes `Choice`, `Input` y `ChipRow`. Se descartó implementar en esta pasada el perfil
+  editable, el Drawer, FCM, Google Directions, Cloudinary y la tecnomecánica condicional: son
+  brechas grandes que requieren decisiones o servicios externos. También se descartó tocar la
+  rama `main`; el merge queda pendiente.
+- **Archivos y commit:** `mobile/src/hooks/useDriverLocation.js`,
+  `mobile/src/hooks/useTripRequests.js`, `mobile/src/hooks/useEarnings.js`,
+  `mobile/src/hooks/useDriverAvailability.js`, `mobile/src/hooks/useDriverRides.js`,
+  `mobile/src/screens/EarningsScreen.js`, `mobile/src/screens/HistoryScreen.js`,
+  `mobile/src/screens/DriverHomeScreen.js`, `mobile/src/components/DriverRegisterForm.js`,
+  `mobile/src/components/RideRequestCard.js`, `mobile/src/components/RideMap.js`,
+  `mobile/src/config/driverRegistration.js`, `mobile/src/hooks/useDriverRegisterForm.js`,
+  `mobile/src/utils/validators.js`, `mobile/scripts/validators.test.mjs`, `README.md`,
+  `docs/SPEC_COMPLIANCE.md`, `docs/ARCHITECTURE.md`, `docs/TESTING.md`,
+  `docs/DELIVERY.md` — commit: (completar tras el commit).
+- **Verificación:** `cd mobile && npm test` → 8/8 tarifas, 15/15 validaciones, 6/6 cuenta
+  regresiva, 16/16 ganancias/historial, 11/11 pagos y 6/6 calificación (**62 en total**).
+  Bundle de Android exportado sin errores. Reglas de Firestore compiladas y desplegadas; la
+  verificación contra Firestore real sigue en 7/7 y no dejó viajes ni cuentas temporales.
+- **Aprendizaje:** (completar) Qué entendí de separar la lógica de las pantallas en hooks
+  reutilizables, de comparar el código contra la especificación sin asumir que “ya está todo”,
+  y de distinguir brechas que se cierran en minutos de las que dependen de servicios externos.
+
+

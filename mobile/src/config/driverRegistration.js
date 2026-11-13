@@ -19,6 +19,21 @@ export const VEHICLE_CATEGORIES = [CATEGORIES.ECONOMY, CATEGORIES.XL, CATEGORIES
   (value) => ({ value, label: CATEGORY_LABEL[value] })
 );
 
+// Colores habituales de vehículo para el selector del registro.
+export const VEHICLE_COLORS = [
+  { value: 'Blanco', label: 'Blanco' },
+  { value: 'Negro', label: 'Negro' },
+  { value: 'Gris', label: 'Gris' },
+  { value: 'Plata', label: 'Plata' },
+  { value: 'Rojo', label: 'Rojo' },
+  { value: 'Azul', label: 'Azul' },
+  { value: 'Verde', label: 'Verde' },
+  { value: 'Amarillo', label: 'Amarillo' },
+  { value: 'Naranja', label: 'Naranja' },
+  { value: 'Café', label: 'Café' },
+  { value: 'Otro', label: 'Otro' },
+];
+
 export const GENDER_OPTIONS = [
   { value: 'female', label: 'Femenino' },
   { value: 'male', label: 'Masculino' },

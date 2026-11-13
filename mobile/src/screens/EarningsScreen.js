@@ -1,18 +1,13 @@
-// AI-assisted: see docs/AI_LOG.md #9
-import { useMemo, useState } from 'react';
+// AI-assisted: see docs/AI_LOG.md #9, #10
+import { useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import theme from '../config/theme';
 import { PRICING } from '../config/pricing';
 import { formatPrice } from '../utils/format';
-import {
-  EARNINGS_PERIODS,
-  EARNINGS_PERIOD_LABEL,
-  summarizeBalance,
-  summarizeEarnings,
-} from '../utils/earnings';
+import { EARNINGS_PERIODS, EARNINGS_PERIOD_LABEL } from '../utils/earnings';
 import ErrorText from '../components/ErrorText';
 import ScreenContainer from '../components/ScreenContainer';
-import useRideHistory from '../hooks/useRideHistory';
+import useEarnings from '../hooks/useEarnings';
 
 const { colors, spacing, radius, fontSize, fontWeight } = theme;
 
@@ -37,11 +32,8 @@ function Line({ label, value, strong }) {
 }
 
 export default function EarningsScreen() {
-  const { rides, loading, error } = useRideHistory();
   const [period, setPeriod] = useState(EARNINGS_PERIODS.TODAY);
-
-  const totals = useMemo(() => summarizeEarnings(rides, period), [rides, period]);
-  const balance = useMemo(() => summarizeBalance(rides), [rides]);
+  const { loading, error, totals, balance } = useEarnings(period);
 
   if (loading) {
     return (

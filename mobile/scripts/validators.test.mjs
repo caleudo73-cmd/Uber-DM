@@ -19,6 +19,7 @@ import {
   isValidSoatNumber,
   isValidTechnomechanicalNumber,
   isValidVehicleYear,
+  isValidVehicleText,
   normalizePlate,
   parseDateInput,
   toISODate,
@@ -114,10 +115,19 @@ test('Edad entre 18 y 80 años', () => {
 });
 
 test('Documentos vigentes', () => {
-  assert.equal(isNotExpired('11/11/2026', now), true); // vence hoy
+  assert.equal(isNotExpired('11/11/2026', now), false); // vence hoy: ya no sirve
+  assert.equal(isNotExpired('12/11/2026', now), true); // posterior a hoy
   assert.equal(isNotExpired('10/11/2026', now), false);
   assert.equal(isNotExpired('01/01/2028', now), true);
   assert.equal(isNotExpired('', now), false);
+});
+
+test('Marca y modelo máximo 30 caracteres', () => {
+  assert.equal(isValidVehicleText('Renault'), true);
+  assert.equal(isValidVehicleText('  Logan  '), true);
+  assert.equal(isValidVehicleText('A'.repeat(30)), true);
+  assert.equal(isValidVehicleText('A'.repeat(31)), false);
+  assert.equal(isValidVehicleText('   '), false);
 });
 
 test('Números de documentos', () => {

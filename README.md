@@ -1,10 +1,18 @@
 # Uber App — versión conductor
 
 Aplicación móvil multiplataforma (React Native + Expo) inspirada en Uber. El repositorio
-incluye la app del pasajero y la base de la app del conductor, con backend en Firebase
+incluye la app del pasajero y la app del conductor, con backend en Firebase
 (Authentication + Firestore en tiempo real). El pago con tarjeta funciona en **modo prueba
 simulado dentro de la app**; las Cloud Functions de Mercado Pago quedan como camino opcional
 para cuando se active el plan Blaze.
+
+Documentación de entrega:
+
+- [Cumplimiento de la especificación](docs/SPEC_COMPLIANCE.md) — matriz ✅ / 🟡 / ❌ punto por punto.
+- [Arquitectura](docs/ARCHITECTURE.md) — capas, modelo de datos, estados, hooks y decisiones.
+- [Pruebas](docs/TESTING.md) — pruebas automáticas, reglas y lista de verificación manual.
+- [Guía de entrega](docs/DELIVERY.md) — instalación, comandos, guion de demo y pendientes.
+- [Bitácora de IA](docs/AI_LOG.md) y [Pagos](docs/PAYMENTS.md).
 
 ## Estructura
 
@@ -12,15 +20,18 @@ para cuando se active el plan Blaze.
 uber-app/
 ├── mobile/                 App Expo (React Native)
 │   ├── src/config/         Tema, constantes, configuración de Firebase y tarifas
-│   ├── src/services/       Acceso a Firebase Auth / Firestore / lugares
-│   ├── src/hooks/          Hooks de viaje, perfil, búsqueda y acciones
+│   ├── src/context/        Sesión del usuario (AuthContext)
+│   ├── src/services/       Acceso a Firebase Auth / Firestore / lugares / pagos
+│   ├── src/hooks/          Hooks de viaje, ubicación, ganancias, perfil y formularios
 │   ├── src/screens/        Pantallas
 │   ├── src/components/     Componentes reutilizables
-│   └── scripts/            Pruebas del motor de tarifas
-└── firebase/
-    ├── firestore.rules     Reglas de seguridad
-    ├── firestore.indexes.json
-    └── functions/          Cloud Functions (Mercado Pago) y script de seed
+│   ├── src/utils/          Funciones puras (tarifas, validaciones, filtros, pagos)
+│   └── scripts/            Pruebas con Node
+├── firebase/
+│   ├── firestore.rules     Reglas de seguridad
+│   ├── firestore.indexes.json
+│   └── functions/          Cloud Functions (Mercado Pago) y script de seed
+└── docs/                   Guías, bitácora, arquitectura y cumplimiento
 ```
 
 ## Requisitos
@@ -213,16 +224,28 @@ npm run test:pricing
   duración, categoría, tarifa, comisión, propina, ganancia del conductor, método y estado del
   pago, y datos del vehículo.
 
-Pendiente de la especificación completa: notificaciones push.
-
 Pruebas (tarifas, validaciones, cuenta regresiva, ganancias, historial, pagos y calificación;
-61 en total):
+62 en total):
 
 ```bash
 cd mobile
 npm test
 ```
 
-## 7. Uso de IA
+## 7. Estado frente a la especificación
 
-La bitácora completa está en [docs/AI_LOG.md](docs/AI_LOG.md).
+La matriz completa está en [docs/SPEC_COMPLIANCE.md](docs/SPEC_COMPLIANCE.md). Resumen:
+
+- **Completo:** registro con validaciones, disponibilidad y GPS, solicitudes con 15 s y
+  rechazo persistente, máquina de estados, tarifa/comisión/propina, pago de prueba y efectivo,
+  calificación, ganancias, historial con filtros, detalle con mapa, reglas de seguridad.
+- **Parcial:** perfil de solo lectura (sin edición), navegación sin Drawer, ruta en línea
+  recta (sin Google Directions), fotos en base64 (sin Cloudinary), tecnomecánica siempre
+  obligatoria, pago real implementado pero sin desplegar.
+- **Pendiente:** notificaciones push (FCM), bitácora en PDF, video de 5 minutos y PR/merge a
+  `main`.
+
+## 8. Uso de IA
+
+La bitácora completa está en [docs/AI_LOG.md](docs/AI_LOG.md). Cada bloque asistido está
+marcado en el código con `// AI-assisted: see docs/AI_LOG.md #N`.

@@ -1,8 +1,9 @@
-// AI-assisted: see docs/AI_LOG.md #9
+// AI-assisted: see docs/AI_LOG.md #9, #10
 import { useMemo, useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import theme from '../config/theme';
-import { RIDE_STATUS_LABEL } from '../config/constants';
+import { PAYMENT_STATUS_LABEL, RIDE_STATUS_LABEL } from '../config/constants';
+import { CATEGORY_LABEL } from '../config/pricing';
 import { formatPrice, formatShortDate } from '../utils/format';
 import {
   HISTORY_PAYMENT_FILTERS,
@@ -29,7 +30,9 @@ const ROLE_LABEL = { driver: 'Conductor', passenger: 'Pasajero' };
 
 function RideRow({ ride, userId, onPress }) {
   const role = roleInRide(ride, userId);
-  const amount = role === 'driver' ? ride.driverEarnings : ride.fare;
+  const isDriver = role === 'driver';
+  const category = CATEGORY_LABEL[ride.category] ?? ride.category ?? '—';
+  const payment = PAYMENT_STATUS_LABEL[ride.paymentStatus] ?? '—';
 
   return (
     <Pressable onPress={onPress} style={styles.row}>
@@ -41,6 +44,9 @@ function RideRow({ ride, userId, onPress }) {
       <Text style={styles.route} numberOfLines={1}>
         {ride.origin?.name ?? 'Origen'} → {ride.destination?.name ?? 'Destino'}
       </Text>
+      <Text style={styles.meta}>
+        {category} · Pago: {payment}
+      </Text>
 
       <View style={styles.rowBottom}>
         {role ? (
@@ -50,7 +56,14 @@ function RideRow({ ride, userId, onPress }) {
         ) : (
           <View />
         )}
-        <Text style={styles.amount}>{formatPrice(amount, ride.currency)}</Text>
+        <View style={styles.amounts}>
+          <Text style={styles.amount}>{formatPrice(ride.fare, ride.currency)}</Text>
+          <Text style={styles.amountNote}>
+            {isDriver
+              ? `Neto ${formatPrice(ride.driverEarnings, ride.currency)}`
+              : `Propina ${formatPrice(ride.tip ?? 0, ride.currency)}`}
+          </Text>
+        </View>
       </View>
     </Pressable>
   );
@@ -226,8 +239,11 @@ const styles = StyleSheet.create({
   rowTop: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: spacing.xs },
   date: { fontSize: fontSize.sm, color: colors.textSecondary },
   status: { fontSize: fontSize.sm, color: colors.textSecondary },
-  route: { fontSize: fontSize.md, color: colors.textPrimary, marginBottom: spacing.sm },
+  route: { fontSize: fontSize.md, color: colors.textPrimary, marginBottom: spacing.xs },
+  meta: { fontSize: fontSize.sm, color: colors.textSecondary, marginBottom: spacing.sm },
   rowBottom: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  amounts: { alignItems: 'flex-end' },
+  amountNote: { fontSize: fontSize.sm, color: colors.textSecondary },
   badge: {
     backgroundColor: colors.background,
     borderRadius: radius.pill,

@@ -167,7 +167,7 @@ function AvailableRides({ rides, driver, isAvailable }) {
             ride={item}
             onAccept={driver.accept}
             onReject={driver.reject}
-            onExpire={driver.dismiss}
+            onExpire={driver.expire}
             loading={driver.loading}
           />
         )}
