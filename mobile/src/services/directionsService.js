@@ -1,8 +1,9 @@
-// AI-assisted: see docs/AI_LOG.md #12
+// AI-assisted: see docs/AI_LOG.md #12, #14
 import { GOOGLE_MAPS_API_KEY } from '../config/env.js';
 import { distanceKm, estimateDurationMin } from '../utils/geo.js';
 
 const DISTANCE_MATRIX_URL = 'https://maps.googleapis.com/maps/api/distancematrix/json';
+const DIRECTIONS_URL = 'https://maps.googleapis.com/maps/api/directions/json';
 
 // Si Google no responde en este tiempo, se usa la estimación local para que el
 // pasajero nunca se quede esperando la cotización.
@@ -56,6 +57,98 @@ const buildDistanceMatrixUrl = (origin, destination, apiKey) => {
     `key=${encodeURIComponent(apiKey)}`,
   ];
   return `${DISTANCE_MATRIX_URL}?${params.join('&')}`;
+};
+
+const buildDirectionsUrl = (origin, destination, apiKey) => {
+  const coords = (point) => `${point.latitude},${point.longitude}`;
+  const params = [
+    `origin=${encodeURIComponent(coords(origin))}`,
+    `destination=${encodeURIComponent(coords(destination))}`,
+    'mode=driving',
+    'language=es',
+    `key=${encodeURIComponent(apiKey)}`,
+  ];
+  return `${DIRECTIONS_URL}?${params.join('&')}`;
+};
+
+// Decodifica el "encoded polyline" de Google a coordenadas de react-native-maps.
+// Algoritmo público: https://developers.google.com/maps/documentation/utilities/polylinealgorithm
+export const decodePolyline = (encoded) => {
+  if (typeof encoded !== 'string' || encoded.length === 0) return [];
+
+  const points = [];
+  let index = 0;
+  let latitude = 0;
+  let longitude = 0;
+
+  while (index < encoded.length) {
+    let shift = 0;
+    let result = 0;
+    let byte;
+
+    do {
+      byte = encoded.charCodeAt(index) - 63;
+      index += 1;
+      result |= (byte & 0x1f) << shift;
+      shift += 5;
+    } while (byte >= 0x20);
+    latitude += result & 1 ? ~(result >> 1) : result >> 1;
+
+    shift = 0;
+    result = 0;
+    do {
+      byte = encoded.charCodeAt(index) - 63;
+      index += 1;
+      result |= (byte & 0x1f) << shift;
+      shift += 5;
+    } while (byte >= 0x20);
+    longitude += result & 1 ? ~(result >> 1) : result >> 1;
+
+    points.push({ latitude: latitude / 1e5, longitude: longitude / 1e5 });
+  }
+
+  return points;
+};
+
+// Extrae la geometría de la primera ruta de Directions. Null si no hay ruta.
+export const parseDirections = (payload) => {
+  if (payload?.status !== 'OK') return null;
+  const points = decodePolyline(payload?.routes?.[0]?.overview_polyline?.points);
+  return points.length >= 2 ? points : null;
+};
+
+/**
+ * Geometría aproximada de la ruta para dibujarla en el mapa.
+ *
+ * Devuelve `null` si falta la llave, si Google falla o si no hay ruta; el mapa
+ * cae entonces a la línea recta entre origen y destino.
+ *
+ * @returns {Promise<Array<{ latitude: number, longitude: number }> | null>}
+ */
+export const getRouteGeometry = async (origin, destination, options = {}) => {
+  const {
+    apiKey = GOOGLE_MAPS_API_KEY,
+    fetchImpl = globalThis.fetch,
+    timeoutMs = DIRECTIONS_TIMEOUT_MS,
+  } = options;
+
+  if (!isCoordinate(origin) || !isCoordinate(destination)) return null;
+  if (!apiKey || typeof fetchImpl !== 'function') return null;
+
+  const controller = typeof AbortController === 'function' ? new AbortController() : null;
+  const timer = controller ? setTimeout(() => controller.abort(), timeoutMs) : null;
+
+  try {
+    const response = await fetchImpl(buildDirectionsUrl(origin, destination, apiKey), {
+      signal: controller?.signal,
+    });
+    if (!response.ok) return null;
+    return parseDirections(await response.json());
+  } catch {
+    return null;
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
 };
 
 /**

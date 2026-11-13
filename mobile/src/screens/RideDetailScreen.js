@@ -1,4 +1,4 @@
-// AI-assisted: see docs/AI_LOG.md #9
+// AI-assisted: see docs/AI_LOG.md #9, #14
 import { useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import theme from '../config/theme';
@@ -75,7 +75,7 @@ export default function RideDetailScreen({ route }) {
         <View style={styles.map}>
           <RideMap origin={ride.origin} destination={ride.destination} showRoute />
         </View>
-        <Text style={styles.mapNote}>Ruta aproximada en línea recta.</Text>
+        <Text style={styles.mapNote}>Ruta aproximada del viaje.</Text>
 
         <Section title="Recorrido">
           <Line label="Origen" value={ride.origin?.name ?? '—'} />

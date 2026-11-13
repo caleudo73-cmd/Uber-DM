@@ -4,9 +4,12 @@
 import assert from 'node:assert/strict';
 import {
   DIRECTIONS_TIMEOUT_MS,
+  decodePolyline,
   estimateRouteMetrics,
+  getRouteGeometry,
   getRouteMetrics,
   isDirectionsEnabled,
+  parseDirections,
   parseDistanceMatrix,
 } from '../src/services/directionsService.js';
 
@@ -139,6 +142,82 @@ test('Coordenadas inválidas lanzan un error claro', async () => {
 test('La llave es opcional y el timeout es razonable', () => {
   assert.equal(typeof isDirectionsEnabled(), 'boolean');
   assert.ok(DIRECTIONS_TIMEOUT_MS > 0 && DIRECTIONS_TIMEOUT_MS <= 10000);
+});
+
+// Ejemplo público del algoritmo de polyline de Google.
+const ENCODED_ROUTE = '_p~iF~ps|U_ulLnnqC_mqNvxq`@';
+
+test('El polyline de Google se decodifica a coordenadas', () => {
+  assert.deepEqual(decodePolyline(ENCODED_ROUTE), [
+    { latitude: 38.5, longitude: -120.2 },
+    { latitude: 40.7, longitude: -120.95 },
+    { latitude: 43.252, longitude: -126.453 },
+  ]);
+  assert.deepEqual(decodePolyline(''), []);
+  assert.deepEqual(decodePolyline(null), []);
+});
+
+test('Directions sin ruta devuelve null', () => {
+  const payload = {
+    status: 'OK',
+    routes: [{ overview_polyline: { points: ENCODED_ROUTE } }],
+  };
+  assert.equal(parseDirections(payload).length, 3);
+  assert.equal(parseDirections({ status: 'ZERO_RESULTS', routes: [] }), null);
+  assert.equal(parseDirections({ status: 'OK', routes: [] }), null);
+  assert.equal(parseDirections(null), null);
+});
+
+test('La geometría se pide a Directions con la llave', async () => {
+  let requestedUrl = '';
+  const points = await getRouteGeometry(ORIGIN, DESTINATION, {
+    apiKey: 'test-key',
+    fetchImpl: async (url) => {
+      requestedUrl = url;
+      return {
+        ok: true,
+        json: async () => ({
+          status: 'OK',
+          routes: [{ overview_polyline: { points: ENCODED_ROUTE } }],
+        }),
+      };
+    },
+  });
+
+  assert.equal(points.length, 3);
+  assert.match(requestedUrl, /origin=6\.2442%2C-75\.5812/);
+  assert.match(requestedUrl, /destination=6\.15%2C-75\.6/);
+  assert.match(requestedUrl, /mode=driving/);
+  assert.match(requestedUrl, /key=test-key/);
+});
+
+test('Si Directions falla el mapa usa la línea recta', async () => {
+  const failed = await getRouteGeometry(ORIGIN, DESTINATION, {
+    apiKey: 'test-key',
+    fetchImpl: async () => {
+      throw new Error('sin red');
+    },
+  });
+  assert.equal(failed, null);
+
+  const httpError = await getRouteGeometry(ORIGIN, DESTINATION, {
+    apiKey: 'test-key',
+    fetchImpl: async () => ({ ok: false }),
+  });
+  assert.equal(httpError, null);
+});
+
+test('Sin llave o con coordenadas inválidas no hay geometría', async () => {
+  assert.equal(
+    await getRouteGeometry(ORIGIN, DESTINATION, {
+      apiKey: '',
+      fetchImpl: async () => {
+        throw new Error('no debería llamarse');
+      },
+    }),
+    null
+  );
+  assert.equal(await getRouteGeometry(null, DESTINATION, { apiKey: 'test-key' }), null);
 });
 
 let failed = 0;
